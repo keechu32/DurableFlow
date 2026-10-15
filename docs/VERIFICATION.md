@@ -53,3 +53,9 @@ docker compose down
 ```
 
 Keep Phase 0's container-verification checklist open until these checks pass. No push, publish, deployment or external infrastructure creation has occurred. The requested SSH URL was configured as the local origin remote only.
+
+## Phase 1 update (2026-10-15)
+
+The local runtime gap is resolved: Colima 0.10.3, Docker Engine 29.5.2 (4 CPUs, 6 GiB configured), Compose 5.6.0. Direct Docker Hub CDN downloads encountered an enterprise gateway certificate failure; Google's public Docker Hub mirror succeeded with TLS verification intact. Configuration and public certificates stayed outside the repository.
+
+`mvn spotless:apply verify` passed: **21 tests, zero failures/errors/skips**, including real PostgreSQL and HTTP integration checks. The complete Compose build/startup passed, as did all nine smoke probes. Earlier failed attempts remain recorded above and in the Phase 1 report; they are superseded by these observed successful runs. No benchmark measurement is claimed.

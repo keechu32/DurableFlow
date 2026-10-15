@@ -4,7 +4,7 @@
 
 DurableFlow will accept versioned DAG workflow definitions and execution requests, persist state, coordinate eligible tasks across workers, and recover abandoned work. PostgreSQL is the initial source of truth and coordination point. Clients communicate through a REST control plane. Task execution will be at least once.
 
-Phase 0 implements independent process startup, shared persistence configuration, migration bootstrap and health checks. The workflow APIs, domain state machines, execution, leases and leadership described below are design intent for later phases.
+Phases 0–1 implement independent startup, migrations, health, domain state machines and the workflow control plane. Execution, leases and leadership remain later-phase design intent.
 
 ## Components
 
@@ -27,7 +27,7 @@ flowchart LR
 - **Worker:** capability registration, atomic task claims, bounded handler execution, heartbeat and result reporting. Task code runs outside database transactions.
 - **Integration tests:** real PostgreSQL behavior and application startup verification.
 
-No scheduler loop, worker polling loop or domain table exists in Phase 0. The initial `engine_metadata` table verifies migrations without guessing later domain schemas.
+Phase 1 adds versioned definitions, executions, tasks and dependency tables. No scheduler or worker loop exists yet. The initial `engine_metadata` table verifies migrations without guessing later domain schemas.
 
 ## Initial deployment topology
 
@@ -45,7 +45,7 @@ Health endpoints reveal aggregate status only. Logs use ECS JSON; workflow/task/
 
 Use short PostgreSQL transactions with row locks/atomic updates for task claims. Leases will identify the owning worker and attempt, with database-time expiration. Guard every completion against stale ownership; no worker may extend its authority using only in-memory state. A later recovery loop will retry expired work. A scheduler advisory lock will coordinate periodic maintenance only; task-claim correctness must not rely on leader availability.
 
-Intended workflow states: `PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCELLING`, `CANCELLED`. Task states: `BLOCKED`, `READY`, `LEASED`, `RUNNING`, `RETRY_WAIT`, `SUCCEEDED`, `FAILED`, `DEAD_LETTERED`, `CANCELLED`. Transition tables and executable rejection rules arrive in Phase 1; they are not implemented in this foundation.
+Intended workflow states: `PENDING`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCELLING`, `CANCELLED`. Task states: `BLOCKED`, `READY`, `LEASED`, `RUNNING`, `RETRY_WAIT`, `SUCCEEDED`, `FAILED`, `DEAD_LETTERED`, `CANCELLED`. Transition matrices and exhaustive rejection tests are implemented in the domain module.
 
 A worker can perform a side effect and crash before committing success. Recovery can repeat that effect. Handlers must use a stable task idempotency key across attempts with the external system or record the effect transactionally when possible. No exactly-once guarantee is made.
 
@@ -65,6 +65,14 @@ A worker can perform a side effect and crash before committing success. Recovery
 
 ## Explicit non-goals
 
-Phase 0 does not execute workflows or demonstrate distributed recovery. Initial scope excludes exactly-once external effects, arbitrary code execution, general-purpose scripting, multi-region coordination, Kafka, Redis, Kubernetes, Raft, production deployment and managed cloud infrastructure. No throughput or latency target is claimed before executable measurements.
+The control plane does not yet execute workflows or demonstrate distributed recovery. Initial scope excludes exactly-once external effects, arbitrary code execution, general-purpose scripting, multi-region coordination, Kafka, Redis, Kubernetes, Raft, production deployment and managed cloud infrastructure. No throughput or latency target is claimed before executable measurements.
 
 See [ADRs](docs/adr/README.md) for tradeoffs and [verification](docs/VERIFICATION.md) for current evidence.
+
+## Phase 1: control-plane transaction boundaries
+
+Definition names identify a family. Publication locks the family's database row and assigns `MAX(version)+1`; published JSON snapshots are immutable. Execution submission and every task/dependency row commit in one transaction. A unique idempotency key serializes concurrent submissions through `INSERT ... ON CONFLICT`; the losing transaction reads the committed row and compares canonical PostgreSQL JSONB request values. Equivalent requests reuse the execution; different requests return 409. Object key order is irrelevant, array order remains significant. Keys currently have global scope and do not expire.
+
+DAG validation uses iterative Kahn traversal, supports disconnected components, and rejects duplicates, missing references, self-edges, cycles, more than 1,000 tasks or 10,000 edges. Each task has an explicit static JSON input; an empty task input inherits workflow input. Dependency edges order execution and do not implicitly merge predecessor output. API responses use snake_case persisted field names; request DTOs use camelCase. Collection pagination uses bounded limit/offset and stable creation-time/UUID ordering.
+
+Cancellation locks the workflow, transitions through CANCELLING, cancels outstanding tasks, and commits CANCELLED atomically. Repeated cancellation is idempotent. Already successful/failed workflows reject cancellation. Later worker-result updates must acquire the same workflow lock before touching tasks so a cancellation that commits first fences subsequent results.

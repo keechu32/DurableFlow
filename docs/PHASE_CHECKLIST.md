@@ -13,16 +13,18 @@
 - [x] Ignore rules, editor settings, README, architecture and contribution guidance.
 - [x] Initial ADRs, including the adjusted module structure.
 - [x] Run host-only verification: compile all modules/tests, unit failure test, formatting and SpotBugs.
-- [ ] Verify PostgreSQL integration and full Compose startup on a Docker-enabled machine.
-- [ ] Complete all Phase 0 verification; see VERIFICATION.md for actual results.
+- [x] Verify PostgreSQL integration and full Compose startup on a Docker-enabled machine.
+- [x] Complete all Phase 0 verification; see VERIFICATION.md for actual results.
 
-Phase 0 implementation is present; completion remains conditional on passing the outstanding container checks. No Phase 1 work has begun.
+Phase 0 verification completed during Phase 1 after installing a local container runtime.
 
-## Subsequent phases (explicit `continue` required)
+## Subsequent phases (owner authorized completing all on 2026-10-15)
 
-- [ ] Phase 1: domain state machines, versioned DAG definitions and idempotent control plane.
+- [x] Phase 1: domain state machines, versioned DAG definitions and idempotent control plane.
 - [ ] Phase 2: atomic scheduling, workers, safe handlers and cancellation.
 - [ ] Phase 3: leases, recovery, retry semantics and leader failover.
 - [ ] Phase 4: distributed telemetry, operations, authentication and threat model.
 - [ ] Phase 5: reproducible faults and measured benchmarks.
 - [ ] Phase 6: public release preparation, audit and fresh-clone verification.
+
+Phase reports: [Phase 1](phases/phase-1.md).

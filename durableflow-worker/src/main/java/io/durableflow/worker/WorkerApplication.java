@@ -4,7 +4,7 @@ import java.util.Map;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"io.durableflow.worker", "io.durableflow.persistence"})
 public class WorkerApplication {
   public static void main(String[] args) {
     SpringApplication application = new SpringApplication(WorkerApplication.class);

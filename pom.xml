@@ -87,6 +87,7 @@
         <artifactId>spotbugs-maven-plugin</artifactId>
         <version>4.9.8.0</version>
         <configuration>
+          <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs-exclude.xml</excludeFilterFile>
           <effort>Max</effort>
           <threshold>Low</threshold>
           <failOnError>true</failOnError>

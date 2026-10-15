@@ -119,6 +119,14 @@ class ApplicationFoundationIT {
         var statement = connection.createStatement()) {
       statement.execute("CREATE SCHEMA concurrent_startup");
     }
+    int pending =
+        Flyway.configure()
+            .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
+            .schemas("concurrent_startup")
+            .load()
+            .info()
+            .pending()
+            .length;
     var start = new java.util.concurrent.CountDownLatch(1);
     try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
       java.util.concurrent.Callable<Integer> migrate =
@@ -137,7 +145,7 @@ class ApplicationFoundationIT {
       assertThat(
               first.get(30, java.util.concurrent.TimeUnit.SECONDS)
                   + second.get(30, java.util.concurrent.TimeUnit.SECONDS))
-          .isEqualTo(1);
+          .isEqualTo(pending);
     }
   }
 

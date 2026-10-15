@@ -8,6 +8,7 @@
   </parent>
   <artifactId>durableflow-persistence</artifactId>
   <dependencies>
+<dependency><groupId>io.durableflow</groupId><artifactId>durableflow-model</artifactId><version>${project.version}</version></dependency><dependency><groupId>tools.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jdbc</artifactId>

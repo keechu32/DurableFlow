@@ -1,3 +1,3 @@
 # Domain module
 
-Reserved for the explicit workflow and task state machines in Phase 1. No persistence or Spring dependency belongs here.
+Dependency-free workflow/task state machines, immutable JSON snapshots and bounded DAG validation. Exhaustive transition tests run with JUnit 5. No Spring or persistence dependencies belong here.

@@ -2,7 +2,7 @@
 
 A small PostgreSQL-backed durable DAG workflow engine, built to make distributed execution and its failure modes understandable and testable.
 
-**Status: Phase 0 foundation.** API, scheduler and worker processes start and expose health endpoints. Workflow submission, scheduling, handlers and recovery are planned; they are not implemented yet. No performance claims or benchmark results exist.
+**Status: Phase 1 control plane.** Versioned DAG definitions, idempotent execution submission, task queries and cancellation are implemented. Scheduling, handlers and recovery are next. No performance claims or benchmark results exist.
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
@@ -27,7 +27,7 @@ docker compose down                 # keep database data
 # Destructive, optional clean reset: docker compose down --volumes
 ```
 
-Health endpoints: `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness`. Readiness includes database connectivity; liveness represents process health. Migration failure prevents startup. Health details are hidden and sensitive actuator endpoints are not exposed. No control-plane endpoints or OpenAPI document exist until Phase 1.
+Health endpoints: `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness`. Readiness includes database connectivity; liveness represents process health. Migration failure prevents startup. Health details are hidden and sensitive actuator endpoints are not exposed. OpenAPI: `/v3/api-docs`; interactive documentation: `/swagger-ui.html`.
 
 ## Build and verification
 
@@ -50,7 +50,7 @@ This still runs the database-unavailable startup test but does not prove success
 
 | Module | Responsibility |
 | --- | --- |
-| `durableflow-model` | Dependency-free domain module reserved for Phase 1 |
+| `durableflow-model` | Dependency-free state machines and DAG validation |
 | `durableflow-persistence` | Shared JDBC configuration and immutable Flyway migrations |
 | `durableflow-api` | Public control-plane application |
 | `durableflow-scheduler` | Coordination application |
@@ -63,7 +63,7 @@ See [architecture](ARCHITECTURE.md), [ADRs](docs/adr/README.md), [phase checklis
 
 The target contract is **at least once**: a task may run again after a crash or lease loss. Side-effecting handlers must use a stable task idempotency key with the destination system. PostgreSQL transactions cannot make arbitrary external effects exactly once.
 
-The next phases add DAG validation and submission, atomic claims and safe handlers, recovery and retries, telemetry and security, fault tests and measurements, then release preparation. Each phase requires explicit authorization to continue. Authentication, role separation, trace propagation and workflow metrics are not available in Phase 0. Use this foundation locally only.
+The remaining phases add atomic claims and safe handlers, recovery and retries, telemetry and security, fault tests and measurements, then release preparation. The owner has authorized completing the remaining phases. Authentication, role separation, trace propagation and workflow metrics are not available in Phase 0. Use this foundation locally only.
 
 ## Troubleshooting
 
@@ -73,3 +73,13 @@ The next phases add DAG validation and submission, atomic claims and safe handle
 - Flyway validation fails: do not edit applied migrations; add a new versioned migration.
 - Maven download fails: check access to Maven Central and your proxy configuration; do not disable TLS verification.
 - An application is unhealthy: run `docker compose ps` and `docker compose logs api scheduler worker postgres`. Startup may take longer on the first image build.
+
+## Control-plane example
+
+```sh
+curl --fail -H 'Content-Type: application/json' --data-binary @durableflow-examples/diamond.json http://localhost:8080/api/v1/workflow-definitions
+# Use definition_id from the response and version 1:
+curl --fail -H 'Content-Type: application/json' -d '{"definitionId":"REPLACE_WITH_DEFINITION_UUID","version":1,"idempotencyKey":"example-1","input":{}}' http://localhost:8080/api/v1/workflow-executions
+```
+
+Definitions with the same name publish a new immutable version. Repeating an equivalent submission reuses the execution; conflicting key reuse returns 409. Query `/api/v1/workflow-executions/{id}` and `/api/v1/workflow-executions/{id}/tasks?limit=50&offset=0`. Cancel via `POST /api/v1/workflow-executions/{id}/cancel`. Errors use `application/problem+json` with a stable `code` field. Input bounds and semantics are described in ARCHITECTURE.md.
