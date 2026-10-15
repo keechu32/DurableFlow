@@ -59,3 +59,9 @@ Keep Phase 0's container-verification checklist open until these checks pass. No
 The local runtime gap is resolved: Colima 0.10.3, Docker Engine 29.5.2 (4 CPUs, 6 GiB configured), Compose 5.6.0. Direct Docker Hub CDN downloads encountered an enterprise gateway certificate failure; Google's public Docker Hub mirror succeeded with TLS verification intact. Configuration and public certificates stayed outside the repository.
 
 `mvn spotless:apply verify` passed: **21 tests, zero failures/errors/skips**, including real PostgreSQL and HTTP integration checks. The complete Compose build/startup passed, as did all nine smoke probes. Earlier failed attempts remain recorded above and in the Phase 1 report; they are superseded by these observed successful runs. No benchmark measurement is claimed.
+
+## Phase 2 update (2026-10-15)
+
+`mvn spotless:apply verify` passed with **29 tests, zero failures/errors/skips**. New PostgreSQL tests exercise 16 competing claims, wrong-owner result rejection, capability filtering, three simultaneous worker identities, prerequisite timestamps, fail-fast propagation, cancellation and graceful draining. Handler tests include the known SHA-256 vector, restricted JSON projection and rejection of shell execution. The foundation health test now passes `--server.port=0` explicitly, fixing a configuration-precedence bug that could route probes to an existing Compose process.
+
+The Phase 2 Compose stack started PostgreSQL, API, scheduler and **three healthy workers**. All 15 health/liveness/readiness smoke probes passed. `python3 durableflow-examples/run.py` submitted the four-task diamond and observed PENDING → RUNNING → SUCCEEDED through the live REST API. This is a functional demonstration, not a throughput measurement.

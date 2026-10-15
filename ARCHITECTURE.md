@@ -4,7 +4,7 @@
 
 DurableFlow will accept versioned DAG workflow definitions and execution requests, persist state, coordinate eligible tasks across workers, and recover abandoned work. PostgreSQL is the initial source of truth and coordination point. Clients communicate through a REST control plane. Task execution will be at least once.
 
-Phases 0–1 implement independent startup, migrations, health, domain state machines and the workflow control plane. Execution, leases and leadership remain later-phase design intent.
+Phases 0–2 implement startup, migrations, health, domain state machines, the control plane, atomic claims and distributed execution. Automatic lease recovery and scheduler leadership arrive next.
 
 ## Components
 
@@ -13,7 +13,7 @@ flowchart LR
     Client[Client] -->|REST: Phase 1| API[API :8080]
     API -->|JDBC transactions| DB[(PostgreSQL)]
     Scheduler[Scheduler :8081] -->|Eligibility and recovery: Phases 2–3| DB
-    Worker[Workers :8082] -->|Claims, leases and results: Phases 2–3| DB
+    Worker[Workers internal :8080] -->|Claims, leases and results: Phases 2–3| DB
     Worker -->|Allowlisted handlers: Phase 2| Handler[Task handlers]
     Operator[Operator] -->|Health probes| API
     Operator -->|Health probes| Scheduler
@@ -27,13 +27,13 @@ flowchart LR
 - **Worker:** capability registration, atomic task claims, bounded handler execution, heartbeat and result reporting. Task code runs outside database transactions.
 - **Integration tests:** real PostgreSQL behavior and application startup verification.
 
-Phase 1 adds versioned definitions, executions, tasks and dependency tables. No scheduler or worker loop exists yet. The initial `engine_metadata` table verifies migrations without guessing later domain schemas.
+Phase 1 adds versioned definitions, executions, tasks and dependency tables. Scheduler and worker loops are implemented in Phase 2. The initial `engine_metadata` table verifies migrations without guessing later domain schemas.
 
 ## Initial deployment topology
 
-Compose runs one API, one scheduler, one worker and PostgreSQL 17 with a named persistent volume. Application images run as an unprivileged user. All host ports bind to loopback. Internally each application listens on port 8080; host ports distinguish processes. Flyway runs on each application's startup; Flyway serializes migration application using its database locking mechanism. An application cannot become ready until migration succeeds. A migration failure prevents startup.
+Compose runs one API, one scheduler, three workers and PostgreSQL 17 with a named persistent volume. Application images run as an unprivileged user. All host ports bind to loopback. Internally each application listens on port 8080; host ports distinguish processes. Flyway runs on each application's startup; Flyway serializes migration application using its database locking mechanism. An application cannot become ready until migration succeeds. A migration failure prevents startup.
 
-All applications share the persistence resource and use a maximum of five JDBC pool connections each (15 potential application connections in this topology). PostgreSQL sessions use UTC and schema timestamps use `TIMESTAMPTZ`. Identifiers for later domain tables will use UUIDs; the bootstrap singleton marker is not a domain identifier.
+All applications share the persistence resource and use a maximum of five JDBC pool connections each (25 potential application connections in this topology). PostgreSQL sessions use UTC and schema timestamps use `TIMESTAMPTZ`. Identifiers for later domain tables will use UUIDs; the bootstrap singleton marker is not a domain identifier.
 
 ## Trust boundaries
 
@@ -65,7 +65,7 @@ A worker can perform a side effect and crash before committing success. Recovery
 
 ## Explicit non-goals
 
-The control plane does not yet execute workflows or demonstrate distributed recovery. Initial scope excludes exactly-once external effects, arbitrary code execution, general-purpose scripting, multi-region coordination, Kafka, Redis, Kubernetes, Raft, production deployment and managed cloud infrastructure. No throughput or latency target is claimed before executable measurements.
+The engine executes workflows; automatic crash recovery is not available until Phase 3. Initial scope excludes exactly-once external effects, arbitrary code execution, general-purpose scripting, multi-region coordination, Kafka, Redis, Kubernetes, Raft, production deployment and managed cloud infrastructure. No throughput or latency target is claimed before executable measurements.
 
 See [ADRs](docs/adr/README.md) for tradeoffs and [verification](docs/VERIFICATION.md) for current evidence.
 
@@ -76,3 +76,15 @@ Definition names identify a family. Publication locks the family's database row 
 DAG validation uses iterative Kahn traversal, supports disconnected components, and rejects duplicates, missing references, self-edges, cycles, more than 1,000 tasks or 10,000 edges. Each task has an explicit static JSON input; an empty task input inherits workflow input. Dependency edges order execution and do not implicitly merge predecessor output. API responses use snake_case persisted field names; request DTOs use camelCase. Collection pagination uses bounded limit/offset and stable creation-time/UUID ordering.
 
 Cancellation locks the workflow, transitions through CANCELLING, cancels outstanding tasks, and commits CANCELLED atomically. Repeated cancellation is idempotent. Already successful/failed workflows reject cancellation. Later worker-result updates must acquire the same workflow lock before touching tasks so a cancellation that commits first fences subsequent results.
+
+## Phase 2: execution and reconciliation
+
+Workers poll PostgreSQL directly. Claims first lock one eligible workflow with `FOR UPDATE SKIP LOCKED`, then one compatible READY task with the same clause. The workflow lock serializes brief state changes within a DAG; unrelated workflows can progress concurrently. Claims increment the attempt, persist LEASED ownership and expiration, then commit. A separate guarded update marks RUNNING and caps lease expiration at the execution timeout. Handler code runs after both transactions have ended. Heartbeats extend ownership only before expiration and never beyond the timeout.
+
+Every start, result, reconciliation and cancellation takes the workflow lock before task locks. Completion additionally checks worker ID, attempt, lease expiration and row version. Heartbeats update a single task atomically without acquiring a workflow lock. This ordering prevents cancellation/result races and lock cycles. Execution is at least once; a lease cannot fence effects outside PostgreSQL.
+
+Reconciliation changes BLOCKED tasks to READY only after every prerequisite succeeds. A permanent task failure fails the workflow and cancels **all** unfinished work (including independent branches); successful results remain available. This fail-fast policy avoids leaving work running after a workflow is known to have failed. The scheduler scans all active workflows for fairness, using one short transaction per workflow. Polling and this linear scan are deliberate initial throughput tradeoffs.
+
+A worker has one execution slot, a unique UUID, an allowlisted capability set and an independent heartbeat thread. Shutdown stops acceptance, records DRAINING, waits up to ten seconds for current work, then interrupts and abandons it. A lease is left for recovery rather than claiming uncommitted completion. Compose grants a fifteen-second stop grace period and runs three worker replicas without host-published worker ports. Workers' health endpoints remain reachable inside the network.
+
+Built-in handlers are pure transformations or bounded delay: `uppercase`, `sha256`, `delay` (0–30,000 ms), and `json-transform` (`pick`, `rename`, `count-keys`). There is no shell, scripting, dynamic class loading or outbound HTTP handler. A task's lease context supplies its stable task idempotency key for future side-effecting handlers.

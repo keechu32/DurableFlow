@@ -2,13 +2,13 @@
 
 A small PostgreSQL-backed durable DAG workflow engine, built to make distributed execution and its failure modes understandable and testable.
 
-**Status: Phase 1 control plane.** Versioned DAG definitions, idempotent execution submission, task queries and cancellation are implemented. Scheduling, handlers and recovery are next. No performance claims or benchmark results exist.
+**Status: Phase 2 execution.** Versioned DAG submission, atomic claims, three-worker execution, safe handlers, dependency ordering, cancellation and graceful draining are implemented. Automatic failure recovery is next. No performance claims or benchmark results exist.
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
 ## Local startup
 
-Prerequisites: Docker Engine/Desktop with Compose v2 supporting `up --wait`, about 4 GB available memory, and ports 5432 and 8080–8082 free. Container builds supply Java 21 and Maven. For host builds, install JDK 21 and Maven 3.9.9 or newer (3.x).
+Prerequisites: Docker Engine/Desktop with Compose v2 supporting `up --wait`, about 4 GB available memory, and ports 5432 and 8080–8081 free. Container builds supply Java 21 and Maven. For host builds, install JDK 21 and Maven 3.9.9 or newer (3.x).
 
 Create local configuration (never commit `.env`):
 
@@ -20,7 +20,7 @@ curl --fail http://localhost:8080/actuator/health
 bash scripts/smoke-test.sh
 ```
 
-The smoke script also requires Python 3 and curl on the host. API: localhost:8080; scheduler health: localhost:8081; worker health: localhost:8082. PostgreSQL listens on localhost:5432. All published ports bind to loopback. Credentials come from your ignored `.env`. Changing database credentials after the volume is initialized does not change existing PostgreSQL accounts.
+The smoke script also requires Python 3 and curl on the host. API: localhost:8080; scheduler health: localhost:8081; worker health: internal port 8080. PostgreSQL listens on localhost:5432. All published ports bind to loopback. Credentials come from your ignored `.env`. Changing database credentials after the volume is initialized does not change existing PostgreSQL accounts.
 
 ```sh
 docker compose down                 # keep database data
@@ -83,3 +83,12 @@ curl --fail -H 'Content-Type: application/json' -d '{"definitionId":"REPLACE_WIT
 ```
 
 Definitions with the same name publish a new immutable version. Repeating an equivalent submission reuses the execution; conflicting key reuse returns 409. Query `/api/v1/workflow-executions/{id}` and `/api/v1/workflow-executions/{id}/tasks?limit=50&offset=0`. Cancel via `POST /api/v1/workflow-executions/{id}/cancel`. Errors use `application/problem+json` with a stable `code` field. Input bounds and semantics are described in ARCHITECTURE.md.
+
+## Execute a DAG
+
+```sh
+python3 durableflow-examples/run.py
+docker compose logs -f worker scheduler
+```
+
+Compose starts three worker replicas. Scale with `docker compose up -d --scale worker=4`. Workers do not publish host ports. Inspect health with `docker compose ps` or `docker compose exec --index 1 worker curl --fail http://localhost:8080/actuator/health/readiness`. A permanent failure cancels all unfinished work; cancellation fences later results but cannot undo an already performed effect. Unknown task types remain queued until a compatible worker exists. See ARCHITECTURE.md for transaction and shutdown boundaries.

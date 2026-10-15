@@ -45,6 +45,18 @@ public class Problems {
 
   @ExceptionHandler(Exception.class)
   public ProblemDetail unexpected(Exception ex) {
+    if (ex instanceof org.springframework.web.ErrorResponse error
+        && error.getStatusCode().value() < 500) {
+      return domain(
+          new FlowException(
+              error.getStatusCode().value(),
+              "http-" + error.getStatusCode().value(),
+              "The request could not be processed"));
+    }
+    org.slf4j.LoggerFactory.getLogger(Problems.class)
+        .atError()
+        .addKeyValue("error_type", ex.getClass().getName())
+        .log("Unhandled request failure");
     var p =
         ProblemDetail.forStatusAndDetail(
             HttpStatus.INTERNAL_SERVER_ERROR, "The request could not be completed");
