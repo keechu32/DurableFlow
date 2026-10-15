@@ -190,7 +190,7 @@ class ExecutionIT {
       await(() -> "FAILED".equals(status(execution)));
       assertThat(control.tasks(execution, 100, 0))
           .extracting(t -> t.get("status"))
-          .containsExactlyInAnyOrder("FAILED", "CANCELLED");
+          .containsExactlyInAnyOrder("DEAD_LETTERED", "CANCELLED");
     } finally {
       worker.stop();
     }

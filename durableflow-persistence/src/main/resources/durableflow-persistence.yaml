@@ -5,6 +5,10 @@ spring:
     password: ${DURABLEFLOW_DB_PASSWORD}
     hikari:
       maximum-pool-size: 5
+      data-source-properties:
+        connectTimeout: 5
+        socketTimeout: 5
+        tcpKeepAlive: true
       connection-timeout: 5000
       connection-init-sql: SET TIME ZONE 'UTC'
   flyway:

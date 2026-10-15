@@ -34,4 +34,9 @@ public enum TaskStatus {
   public boolean terminal() {
     return Set.of(SUCCEEDED, FAILED, DEAD_LETTERED, CANCELLED).contains(this);
   }
+
+  public void requireDependencyRetry(TaskStatus target, String category) {
+    if (this != CANCELLED || target != BLOCKED || !"UPSTREAM_FAILED".equals(category))
+      throw new IllegalStateException("Cannot reactivate this cancelled task");
+  }
 }

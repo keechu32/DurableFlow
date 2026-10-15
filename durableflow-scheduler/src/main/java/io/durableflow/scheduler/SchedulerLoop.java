@@ -13,15 +13,20 @@ import org.springframework.stereotype.Component;
     matchIfMissing = true)
 public final class SchedulerLoop {
   private final ExecutionStore store;
+  private final Leader leader;
 
-  public SchedulerLoop(ExecutionStore store) {
+  public SchedulerLoop(ExecutionStore store, Leader leader) {
+    this.leader = leader;
     this.store = store;
   }
 
   @Scheduled(fixedDelayString = "${durableflow.scheduler.poll-millis:100}")
   public void tick() {
     try {
-      store.reconcile();
+      if (leader.elected()) {
+        store.recover();
+        store.reconcile();
+      }
     } catch (RuntimeException ex) {
       LoggerFactory.getLogger(SchedulerLoop.class)
           .warn("Scheduler persistence operation unavailable");

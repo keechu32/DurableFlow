@@ -4,7 +4,7 @@
 
 DurableFlow will accept versioned DAG workflow definitions and execution requests, persist state, coordinate eligible tasks across workers, and recover abandoned work. PostgreSQL is the initial source of truth and coordination point. Clients communicate through a REST control plane. Task execution will be at least once.
 
-Phases 0–2 implement startup, migrations, health, domain state machines, the control plane, atomic claims and distributed execution. Automatic lease recovery and scheduler leadership arrive next.
+Phases 0–2 implement startup, migrations, health, domain state machines, the control plane, atomic claims and distributed execution. Lease recovery and session-advisory-lock scheduler leadership are implemented in Phase 3.
 
 ## Components
 
@@ -65,7 +65,7 @@ A worker can perform a side effect and crash before committing success. Recovery
 
 ## Explicit non-goals
 
-The engine executes workflows; automatic crash recovery is not available until Phase 3. Initial scope excludes exactly-once external effects, arbitrary code execution, general-purpose scripting, multi-region coordination, Kafka, Redis, Kubernetes, Raft, production deployment and managed cloud infrastructure. No throughput or latency target is claimed before executable measurements.
+The engine executes workflows; automatic crash recovery is implemented; deployment HA remains outside the initial scope. Initial scope excludes exactly-once external effects, arbitrary code execution, general-purpose scripting, multi-region coordination, Kafka, Redis, Kubernetes, Raft, production deployment and managed cloud infrastructure. No throughput or latency target is claimed before executable measurements.
 
 See [ADRs](docs/adr/README.md) for tradeoffs and [verification](docs/VERIFICATION.md) for current evidence.
 
@@ -88,3 +88,11 @@ Reconciliation changes BLOCKED tasks to READY only after every prerequisite succ
 A worker has one execution slot, a unique UUID, an allowlisted capability set and an independent heartbeat thread. Shutdown stops acceptance, records DRAINING, waits up to ten seconds for current work, then interrupts and abandons it. A lease is left for recovery rather than claiming uncommitted completion. Compose grants a fifteen-second stop grace period and runs three worker replicas without host-published worker ports. Workers' health endpoints remain reachable inside the network.
 
 Built-in handlers are pure transformations or bounded delay: `uppercase`, `sha256`, `delay` (0–30,000 ms), and `json-transform` (`pick`, `rename`, `count-keys`). There is no shell, scripting, dynamic class loading or outbound HTTP handler. A task's lease context supplies its stable task idempotency key for future side-effecting handlers.
+
+## Phase 3: recovery and leadership
+
+`task_attempts` durably records each claim, start and outcome. Completion deduplicates against the attempt's original worker and JSONB output before considering current workflow terminal status. Stale generations cannot overwrite newer results. Task updates also compare the selected version within the workflow transaction. Heartbeats remain single guarded statements and never resurrect an expired lease.
+
+Only the PostgreSQL advisory-lock scheduler leader performs lease recovery and reconciliation. Expired attempts become RETRY_WAIT or DEAD_LETTERED according to category and remaining budget; available retries become READY in a later reconciliation. Manual retry has explicit domain guards distinct from normal terminal-state transitions. It grants another attempt budget without resetting historical attempt numbers. The leader holds one session connection and explicitly releases its advisory lock before returning that connection to Hikari.
+
+See [delivery semantics](docs/DELIVERY_SEMANTICS.md) for all eight failure windows, transaction/duplicate-result behavior and the handler idempotency contract.

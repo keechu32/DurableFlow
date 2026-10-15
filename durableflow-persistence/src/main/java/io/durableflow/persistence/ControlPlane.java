@@ -88,12 +88,13 @@ public class ControlPlane {
           spec.tasks().forEach(t -> ids.put(t.id(), UUID.randomUUID()));
           for (var task : spec.tasks())
             db.update(
-                "INSERT INTO task_executions(id,workflow_id,task_definition_id,type,status,max_attempts,timeout_seconds,input) VALUES (?,?,?,?,?,?,?,?::jsonb)",
+                "INSERT INTO task_executions(id,workflow_id,task_definition_id,type,status,max_attempts,attempt_limit,timeout_seconds,input) VALUES (?,?,?,?,?,?,?,?,?::jsonb)",
                 ids.get(task.id()),
                 id,
                 task.id(),
                 task.type(),
                 task.dependsOn().isEmpty() ? "READY" : "BLOCKED",
+                task.maxAttempts(),
                 task.maxAttempts(),
                 task.timeoutSeconds(),
                 json.write(task.input().isEmpty() ? request.input() : task.input()));
@@ -141,6 +142,9 @@ public class ControlPlane {
           status.requireTransitionTo(WorkflowStatus.CANCELLING);
           db.update(
               "UPDATE workflow_executions SET status='CANCELLING',cancelled_at=clock_timestamp(),cancellation_reason='Requested by client',version=version+1 WHERE id=?",
+              id);
+          db.update(
+              "UPDATE task_attempts SET status='CANCELLED',completed_at=clock_timestamp() WHERE task_id IN (SELECT id FROM task_executions WHERE workflow_id=?) AND status IN ('LEASED','RUNNING')",
               id);
           db.update(
               "UPDATE task_executions SET status='CANCELLED',completed_at=clock_timestamp(),lease_owner=NULL,lease_expires_at=NULL,version=version+1 WHERE workflow_id=? AND status IN ('BLOCKED','READY','LEASED','RUNNING','RETRY_WAIT')",

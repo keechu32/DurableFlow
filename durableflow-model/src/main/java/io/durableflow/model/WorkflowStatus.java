@@ -27,4 +27,9 @@ public enum WorkflowStatus {
   public boolean terminal() {
     return this == SUCCEEDED || this == FAILED || this == CANCELLED;
   }
+
+  public void requireManualRetry() {
+    if (this != FAILED)
+      throw new IllegalStateException("Only failed workflows can be reopened by task retry");
+  }
 }

@@ -2,7 +2,7 @@
 
 A small PostgreSQL-backed durable DAG workflow engine, built to make distributed execution and its failure modes understandable and testable.
 
-**Status: Phase 2 execution.** Versioned DAG submission, atomic claims, three-worker execution, safe handlers, dependency ordering, cancellation and graceful draining are implemented. Automatic failure recovery is next. No performance claims or benchmark results exist.
+**Status: Phase 3 reliability.** DAG execution, fenced leases, automatic recovery, retries, dead letters, idempotent results and scheduler failover are implemented. Operational/security hardening is next. No performance claims or benchmark results exist.
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
@@ -92,3 +92,9 @@ docker compose logs -f worker scheduler
 ```
 
 Compose starts three worker replicas. Scale with `docker compose up -d --scale worker=4`. Workers do not publish host ports. Inspect health with `docker compose ps` or `docker compose exec --index 1 worker curl --fail http://localhost:8080/actuator/health/readiness`. A permanent failure cancels all unfinished work; cancellation fences later results but cannot undo an already performed effect. Unknown task types remain queued until a compatible worker exists. See ARCHITECTURE.md for transaction and shutdown boundaries.
+
+## Recovery and dead letters
+
+The scheduler recovers expired leases automatically. Kill a worker during a `delay` task and another worker will claim a new attempt after lease expiry/backoff. Run two schedulers with `docker compose up -d --scale scheduler=2` only after removing the scheduler host-port mapping or using the fault-test override added later; one database session owns maintenance leadership. Task claims stay safe independently of leadership.
+
+Query `GET /api/v1/dead-letter-tasks?limit=50&offset=0`; retry with `POST /api/v1/task-executions/{id}/retry`. Retries preserve task identity and immutable input. A user-cancelled workflow cannot be reopened. See [delivery semantics and failure windows](docs/DELIVERY_SEMANTICS.md) before writing side-effecting handlers.
