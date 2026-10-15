@@ -18,6 +18,8 @@ class DatabaseRequiredTest {
                   new SpringApplicationBuilder(ApiApplication.class)
                       .run(
                           "--spring.config.name=durableflow-api",
+                          "--DURABLEFLOW_OPERATOR_TOKEN=" + TestAuth.OPERATOR,
+                          "--DURABLEFLOW_ADMIN_TOKEN=" + TestAuth.ADMIN,
                           "--server.port=0",
                           "--DURABLEFLOW_DB_URL=jdbc:postgresql://127.0.0.1:"
                               + socket.getLocalPort()

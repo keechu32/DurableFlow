@@ -1,0 +1,25 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 96
+    spike_limit_mib: 24
+  batch:
+    timeout: 200ms
+    send_batch_size: 256
+exporters:
+  file:
+    path: /var/lib/otel/durableflow-traces.json
+    rotation:
+      max_megabytes: 10
+      max_backups: 2
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [file]

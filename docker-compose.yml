@@ -1,11 +1,17 @@
 name: durableflow
 x-app: &app
+  mem_limit: 384m
   environment: &app-env
     DURABLEFLOW_DB_URL: jdbc:postgresql://postgres:5432/durableflow
     DURABLEFLOW_DB_USER: ${DURABLEFLOW_DB_USER:?Set DURABLEFLOW_DB_USER in .env}
     DURABLEFLOW_DB_PASSWORD: ${DURABLEFLOW_DB_PASSWORD:?Set DURABLEFLOW_DB_PASSWORD in .env}
     TZ: UTC
+    JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError
+    DURABLEFLOW_TELEMETRY_EXPORT: "true"
+    DURABLEFLOW_OTLP_ENDPOINT: http://collector:4317
   depends_on:
+    collector:
+      condition: service_started
     postgres:
       condition: service_healthy
   healthcheck:
@@ -31,6 +37,34 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+  telemetry-init:
+    image: busybox:1.37.0
+    command: ["sh", "-c", "chown 10001:10001 /traces"]
+    volumes:
+      - trace-data:/traces
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.162.0
+    mem_limit: 256m
+    user: "10001:10001"
+    depends_on:
+      telemetry-init:
+        condition: service_completed_successfully
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./ops/collector.yaml:/etc/otelcol/config.yaml:ro
+      - trace-data:/var/lib/otel
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    mem_limit: 256m
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=24h"]
+    volumes:
+      - ./ops/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+    secrets: [operator_token]
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      api:
+        condition: service_healthy
   api:
     <<: *app
     build:
@@ -40,6 +74,8 @@ services:
     environment:
       <<: *app-env
       SERVER_PORT: 8080
+      DURABLEFLOW_OPERATOR_TOKEN: ${DURABLEFLOW_OPERATOR_TOKEN:?Run python3 scripts/init-env.py}
+      DURABLEFLOW_ADMIN_TOKEN: ${DURABLEFLOW_ADMIN_TOKEN:?Run python3 scripts/init-env.py}
     ports:
       - "127.0.0.1:8080:8080"
   scheduler:
@@ -67,3 +103,7 @@ services:
     stop_grace_period: 15s
 volumes:
   postgres-data:
+  trace-data:
+secrets:
+  operator_token:
+    file: ./.secrets/operator-token

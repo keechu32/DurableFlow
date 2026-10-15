@@ -10,7 +10,20 @@ public record Lease(
     int attempt,
     UUID workerId,
     Map<String, Object> input,
-    int timeoutSeconds) {
+    int timeoutSeconds,
+    String traceParent) {
+  public Lease(
+      UUID id,
+      UUID workflowId,
+      String taskDefinitionId,
+      String type,
+      int attempt,
+      UUID workerId,
+      Map<String, Object> input,
+      int timeoutSeconds) {
+    this(id, workflowId, taskDefinitionId, type, attempt, workerId, input, timeoutSeconds, null);
+  }
+
   public Lease {
     input = JsonPayload.snapshot(input);
   }

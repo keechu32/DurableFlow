@@ -1,0 +1,6 @@
+skip-dirs:
+  - .git
+  - .secrets
+  - .local
+skip-files:
+  - .env

@@ -49,7 +49,10 @@ class ApplicationFoundationIT {
                     "DURABLEFLOW_DB_USER", POSTGRES.getUsername(),
                     "DURABLEFLOW_DB_PASSWORD", POSTGRES.getPassword(),
                     "server.port", "0"))
-            .run("--server.port=0")) {
+            .run(
+                "--server.port=0",
+                "--DURABLEFLOW_OPERATOR_TOKEN=" + TestAuth.OPERATOR,
+                "--DURABLEFLOW_ADMIN_TOKEN=" + TestAuth.ADMIN)) {
       int port = ((WebServerApplicationContext) context).getWebServer().getPort();
       try (var client = HttpClient.newHttpClient()) {
         for (String path : new String[] {"health", "health/liveness", "health/readiness"}) {
@@ -72,7 +75,7 @@ class ApplicationFoundationIT {
                     .GET()
                     .build(),
                 HttpResponse.BodyHandlers.ofString());
-        assertThat(response.statusCode()).withFailMessage(response.body()).isEqualTo(404);
+        assertThat(response.statusCode()).withFailMessage(response.body()).isIn(401, 403, 404);
       }
       var flyway = context.getBean(Flyway.class);
       flyway.validate();

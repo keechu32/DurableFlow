@@ -21,6 +21,8 @@ jobs:
           echo "::add-mask::$password"
           echo "DURABLEFLOW_DB_USER=durableflow_ci" >> "$GITHUB_ENV"
           echo "DURABLEFLOW_DB_PASSWORD=$password" >> "$GITHUB_ENV"
+      - name: Generate ignored local application secrets
+        run: python3 scripts/init-env.py
       - name: Verify formatting, static analysis, unit and Testcontainers tests
         run: mvn -B -ntp verify
       - name: Start all applications against PostgreSQL
@@ -39,3 +41,24 @@ jobs:
         with:
           name: test-reports
           path: '**/target/*-reports/'
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn -B -ntp -DskipTests package
+      - name: Scan resolved application jars and source for vulnerabilities and secrets
+        uses: aquasecurity/trivy-action@0.33.1
+        env:
+          TRIVY_OFFLINE_SCAN: 'true'
+        with:
+          scan-type: fs
+          scanners: vuln,secret
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: '1'

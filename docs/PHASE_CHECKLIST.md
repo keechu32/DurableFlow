@@ -23,8 +23,8 @@ Phase 0 verification completed during Phase 1 after installing a local container
 - [x] Phase 1: domain state machines, versioned DAG definitions and idempotent control plane.
 - [x] Phase 2: atomic scheduling, workers, safe handlers and cancellation.
 - [x] Phase 3: leases, recovery, retry semantics and leader failover.
-- [ ] Phase 4: distributed telemetry, operations, authentication and threat model.
+- [x] Phase 4: distributed telemetry, operations, authentication and threat model.
 - [ ] Phase 5: reproducible faults and measured benchmarks.
 - [ ] Phase 6: public release preparation, audit and fresh-clone verification.
 
-Phase reports: [Phase 1](phases/phase-1.md), [Phase 2](phases/phase-2.md), [Phase 3](phases/phase-3.md).
+Phase reports: [Phase 1](phases/phase-1.md), [Phase 2](phases/phase-2.md), [Phase 3](phases/phase-3.md), [Phase 4](phases/phase-4.md).

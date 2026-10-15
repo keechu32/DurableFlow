@@ -1,6 +1,7 @@
 package io.durableflow.worker;
 
 import io.durableflow.model.Lease;
+import io.durableflow.observability.Telemetry;
 import io.durableflow.persistence.ExecutionStore;
 import java.util.*;
 import java.util.concurrent.*;
@@ -20,6 +21,7 @@ public final class WorkerRuntime implements SmartLifecycle {
   private static final Logger LOG = LoggerFactory.getLogger(WorkerRuntime.class);
   private final ExecutionStore store;
   private final Handlers handlers;
+  private final Telemetry telemetry;
   private final UUID id = UUID.randomUUID();
   private final int leaseSeconds;
   private final long pollMillis;
@@ -32,10 +34,12 @@ public final class WorkerRuntime implements SmartLifecycle {
   public WorkerRuntime(
       ExecutionStore store,
       Handlers handlers,
+      Telemetry telemetry,
       @Value("${durableflow.lease-seconds:10}") int leaseSeconds,
       @Value("${durableflow.poll-millis:100}") long pollMillis) {
     if (leaseSeconds < 2 || leaseSeconds > 300 || pollMillis < 10 || pollMillis > 10000)
       throw new IllegalArgumentException("Invalid worker timing");
+    this.telemetry = telemetry;
     this.store = store;
     this.handlers = handlers;
     this.leaseSeconds = leaseSeconds;
@@ -85,19 +89,39 @@ public final class WorkerRuntime implements SmartLifecycle {
           synchronized (activeGuard) {
             active = lease;
           }
-          try {
-            var output = handlers.execute(lease);
-            boolean committed = store.succeed(lease, output);
-            log(lease, committed ? "SUCCEEDED" : "STALE");
-          } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            log(lease, "ABANDONED");
-          } catch (IllegalArgumentException ex) {
-            store.fail(lease, "INVALID_INPUT");
-            log(lease, "FAILED");
-          } catch (RuntimeException ex) {
-            store.fail(lease, "HANDLER_ERROR");
-            log(lease, "FAILED");
+          long began = System.nanoTime();
+          try (var trace =
+              telemetry.start(
+                  "task.execute",
+                  lease.traceParent(),
+                  Map.of(
+                      "workflow_id",
+                      lease.workflowId().toString(),
+                      "task_id",
+                      lease.id().toString(),
+                      "attempt",
+                      Integer.toString(lease.attempt()),
+                      "worker_id",
+                      id.toString()),
+                  io.opentelemetry.api.trace.SpanKind.CONSUMER)) {
+            try {
+              var output = handlers.execute(lease);
+              boolean committed = store.succeed(lease, output);
+              log(lease, committed ? "SUCCEEDED" : "STALE");
+            } catch (InterruptedException ex) {
+              Thread.currentThread().interrupt();
+              log(lease, "ABANDONED");
+            } catch (IllegalArgumentException ex) {
+              trace.error();
+              store.fail(lease, "INVALID_INPUT");
+              log(lease, "FAILED");
+            } catch (RuntimeException ex) {
+              trace.error();
+              store.fail(lease, "HANDLER_ERROR");
+              log(lease, "FAILED");
+            }
+          } finally {
+            telemetry.timing("execution.duration", System.nanoTime() - began);
           }
         } catch (InterruptedException ex) {
           Thread.currentThread().interrupt();
@@ -126,11 +150,7 @@ public final class WorkerRuntime implements SmartLifecycle {
 
   private void log(Lease lease, String status) {
     LOG.atInfo()
-        .addKeyValue("workflow_id", lease.workflowId())
-        .addKeyValue("task_id", lease.id())
         .addKeyValue("task_definition_id", lease.taskDefinitionId())
-        .addKeyValue("attempt", lease.attempt())
-        .addKeyValue("worker_id", id)
         .addKeyValue("status", status)
         .log("Task execution finished");
   }

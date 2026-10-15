@@ -1,6 +1,7 @@
 package io.durableflow.persistence;
 
 import io.durableflow.model.*;
+import io.durableflow.observability.Telemetry;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -12,8 +13,17 @@ public class ControlPlane {
   private final JdbcTemplate db;
   private final TransactionTemplate tx;
   private final Json json;
+  private final Telemetry telemetry;
+  private final Audit audit;
 
-  public ControlPlane(JdbcTemplate db, PlatformTransactionManager manager, Json json) {
+  public ControlPlane(
+      JdbcTemplate db,
+      PlatformTransactionManager manager,
+      Json json,
+      Telemetry telemetry,
+      Audit audit) {
+    this.telemetry = telemetry;
+    this.audit = audit;
     this.db = db;
     this.tx = new TransactionTemplate(manager);
     this.json = json;
@@ -65,13 +75,14 @@ public class ControlPlane {
           String encoded = json.write(request);
           int inserted =
               db.update(
-                  "INSERT INTO workflow_executions(id,definition_id,definition_version,idempotency_key,request,input,status) VALUES (?,?,?,?,?::jsonb,?::jsonb,'PENDING') ON CONFLICT(idempotency_key) DO NOTHING",
+                  "INSERT INTO workflow_executions(id,definition_id,definition_version,idempotency_key,request,input,status,trace_parent) VALUES (?,?,?,?,?::jsonb,?::jsonb,'PENDING',?) ON CONFLICT(idempotency_key) DO NOTHING",
                   id,
                   request.definitionId(),
                   request.version(),
                   request.idempotencyKey(),
                   encoded,
-                  json.write(request.input()));
+                  json.write(request.input()),
+                  telemetry.traceParent());
           if (inserted == 0) {
             var existing =
                 db.queryForMap(
@@ -88,7 +99,7 @@ public class ControlPlane {
           spec.tasks().forEach(t -> ids.put(t.id(), UUID.randomUUID()));
           for (var task : spec.tasks())
             db.update(
-                "INSERT INTO task_executions(id,workflow_id,task_definition_id,type,status,max_attempts,attempt_limit,timeout_seconds,input) VALUES (?,?,?,?,?,?,?,?,?::jsonb)",
+                "INSERT INTO task_executions(id,workflow_id,task_definition_id,type,status,max_attempts,attempt_limit,timeout_seconds,input,trace_parent) VALUES (?,?,?,?,?,?,?,?,?::jsonb,?)",
                 ids.get(task.id()),
                 id,
                 task.id(),
@@ -97,13 +108,16 @@ public class ControlPlane {
                 task.maxAttempts(),
                 task.maxAttempts(),
                 task.timeoutSeconds(),
-                json.write(task.input().isEmpty() ? request.input() : task.input()));
+                json.write(task.input().isEmpty() ? request.input() : task.input()),
+                telemetry.traceParent());
           for (var task : spec.tasks())
             for (var parent : task.dependsOn())
               db.update(
                   "INSERT INTO task_dependencies(task_id,prerequisite_id) VALUES (?,?)",
                   ids.get(task.id()),
                   ids.get(parent));
+          telemetry.workflow(id);
+          AfterCommit.run(() -> telemetry.count("workflows.submitted", "ACCEPTED"));
           return execution(id);
         });
   }
@@ -129,6 +143,10 @@ public class ControlPlane {
   }
 
   public Map<String, Object> cancel(UUID id) {
+    return cancel(id, "system");
+  }
+
+  public Map<String, Object> cancel(UUID id, String actor) {
     return tx.execute(
         s -> {
           var rows =
@@ -149,6 +167,8 @@ public class ControlPlane {
           db.update(
               "UPDATE task_executions SET status='CANCELLED',completed_at=clock_timestamp(),lease_owner=NULL,lease_expires_at=NULL,version=version+1 WHERE workflow_id=? AND status IN ('BLOCKED','READY','LEASED','RUNNING','RETRY_WAIT')",
               id);
+          audit.record("WORKFLOW_CANCEL", actor, id, null);
+          AfterCommit.run(() -> telemetry.count("workflows.completed", "CANCELLED"));
           WorkflowStatus.CANCELLING.requireTransitionTo(WorkflowStatus.CANCELLED);
           db.update(
               "UPDATE workflow_executions SET status='CANCELLED',completed_at=clock_timestamp(),version=version+1 WHERE id=?",

@@ -7,7 +7,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication(
-    scanBasePackages = {"io.durableflow.scheduler", "io.durableflow.persistence"})
+    scanBasePackages = {
+      "io.durableflow.scheduler",
+      "io.durableflow.persistence",
+      "io.durableflow.observability"
+    })
 public class SchedulerApplication {
   public static void main(String[] args) {
     SpringApplication application = new SpringApplication(SchedulerApplication.class);

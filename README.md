@@ -2,19 +2,18 @@
 
 A small PostgreSQL-backed durable DAG workflow engine, built to make distributed execution and its failure modes understandable and testable.
 
-**Status: Phase 3 reliability.** DAG execution, fenced leases, automatic recovery, retries, dead letters, idempotent results and scheduler failover are implemented. Operational/security hardening is next. No performance claims or benchmark results exist.
+**Status: Phase 4 operations and security.** Durable DAG execution and recovery now include role-based API authentication, audit, strict input limits, OpenTelemetry traces and Prometheus metrics. Fault measurements and release preparation are next. No performance claims or benchmark results exist.
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
 ## Local startup
 
-Prerequisites: Docker Engine/Desktop with Compose v2 supporting `up --wait`, about 4 GB available memory, and ports 5432 and 8080–8081 free. Container builds supply Java 21 and Maven. For host builds, install JDK 21 and Maven 3.9.9 or newer (3.x).
+Prerequisites: Docker Engine/Desktop with Compose v2 supporting `up --wait`, about 4 GB available memory, and ports 5432, 8080–8081 and 9090 free. Container builds supply Java 21 and Maven. For host builds, install JDK 21 and Maven 3.9.9 or newer (3.x).
 
 Create local configuration (never commit `.env`):
 
 ```sh
-umask 077
-printf 'DURABLEFLOW_DB_USER=durableflow\nDURABLEFLOW_DB_PASSWORD=%s\n' "$(openssl rand -hex 24)" > .env
+python3 scripts/init-env.py
 docker compose up --build --wait --wait-timeout 240
 curl --fail http://localhost:8080/actuator/health
 bash scripts/smoke-test.sh
@@ -51,6 +50,7 @@ This still runs the database-unavailable startup test but does not prove success
 | Module | Responsibility |
 | --- | --- |
 | `durableflow-model` | Dependency-free state machines and DAG validation |
+| `durableflow-observability` | Shared trace SDK and bounded metrics |
 | `durableflow-persistence` | Shared JDBC configuration and immutable Flyway migrations |
 | `durableflow-api` | Public control-plane application |
 | `durableflow-scheduler` | Coordination application |
@@ -63,7 +63,7 @@ See [architecture](ARCHITECTURE.md), [ADRs](docs/adr/README.md), [phase checklis
 
 The target contract is **at least once**: a task may run again after a crash or lease loss. Side-effecting handlers must use a stable task idempotency key with the destination system. PostgreSQL transactions cannot make arbitrary external effects exactly once.
 
-The remaining phases add atomic claims and safe handlers, recovery and retries, telemetry and security, fault tests and measurements, then release preparation. The owner has authorized completing the remaining phases. Authentication, role separation, trace propagation and workflow metrics are not available in Phase 0. Use this foundation locally only.
+The remaining phases add atomic claims and safe handlers, recovery and retries, telemetry and security, fault tests and measurements, then release preparation. The owner has authorized completing the remaining phases. The API now requires operator/admin bearer tokens; cancellation and manual retry require admin. Use this development deployment locally only.
 
 ## Troubleshooting
 
@@ -77,9 +77,10 @@ The remaining phases add atomic claims and safe handlers, recovery and retries, 
 ## Control-plane example
 
 ```sh
-curl --fail -H 'Content-Type: application/json' --data-binary @durableflow-examples/diamond.json http://localhost:8080/api/v1/workflow-definitions
+set -a; . ./.env; set +a  # load the generated local development configuration
+curl --fail -H "Authorization: Bearer $DURABLEFLOW_OPERATOR_TOKEN" -H 'Content-Type: application/json' --data-binary @durableflow-examples/diamond.json http://localhost:8080/api/v1/workflow-definitions
 # Use definition_id from the response and version 1:
-curl --fail -H 'Content-Type: application/json' -d '{"definitionId":"REPLACE_WITH_DEFINITION_UUID","version":1,"idempotencyKey":"example-1","input":{}}' http://localhost:8080/api/v1/workflow-executions
+curl --fail -H "Authorization: Bearer $DURABLEFLOW_OPERATOR_TOKEN" -H 'Content-Type: application/json' -d '{"definitionId":"REPLACE_WITH_DEFINITION_UUID","version":1,"idempotencyKey":"example-1","input":{}}' http://localhost:8080/api/v1/workflow-executions
 ```
 
 Definitions with the same name publish a new immutable version. Repeating an equivalent submission reuses the execution; conflicting key reuse returns 409. Query `/api/v1/workflow-executions/{id}` and `/api/v1/workflow-executions/{id}/tasks?limit=50&offset=0`. Cancel via `POST /api/v1/workflow-executions/{id}/cancel`. Errors use `application/problem+json` with a stable `code` field. Input bounds and semantics are described in ARCHITECTURE.md.
@@ -98,3 +99,7 @@ Compose starts three worker replicas. Scale with `docker compose up -d --scale w
 The scheduler recovers expired leases automatically. Kill a worker during a `delay` task and another worker will claim a new attempt after lease expiry/backoff. Run two schedulers with `docker compose up -d --scale scheduler=2` only after removing the scheduler host-port mapping or using the fault-test override added later; one database session owns maintenance leadership. Task claims stay safe independently of leadership.
 
 Query `GET /api/v1/dead-letter-tasks?limit=50&offset=0`; retry with `POST /api/v1/task-executions/{id}/retry`. Retries preserve task identity and immutable input. A user-cancelled workflow cannot be reopened. See [delivery semantics and failure windows](docs/DELIVERY_SEMANTICS.md) before writing side-effecting handlers.
+
+## Operations and security
+
+Prometheus: http://localhost:9090. OpenAPI and API metrics require a bearer token. `scripts/init-env.py` creates distinct operator/admin tokens and the Prometheus secret file without printing them. The Python example reads the local operator token automatically. See [operations](docs/OPERATIONS.md) for metrics, trace inspection and dashboards, and [security/threat model](docs/SECURITY.md) for trust boundaries and remaining deployment requirements.

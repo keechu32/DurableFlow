@@ -1,6 +1,7 @@
 package io.durableflow.persistence;
 
 import io.durableflow.model.*;
+import io.durableflow.observability.Telemetry;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -12,8 +13,17 @@ public class ExecutionStore {
   private final JdbcTemplate db;
   private final TransactionTemplate tx;
   private final Json json;
+  private final Telemetry telemetry;
+  private final Audit audit;
 
-  public ExecutionStore(JdbcTemplate db, PlatformTransactionManager manager, Json json) {
+  public ExecutionStore(
+      JdbcTemplate db,
+      PlatformTransactionManager manager,
+      Json json,
+      Telemetry telemetry,
+      Audit audit) {
+    this.telemetry = telemetry;
+    this.audit = audit;
     this.db = db;
     this.tx = new TransactionTemplate(manager);
     this.json = json;
@@ -82,7 +92,14 @@ public class ExecutionStore {
               db.update(
                   "UPDATE workflow_executions SET status='RUNNING',started_at=COALESCE(started_at,clock_timestamp()),version=version+1 WHERE id=? AND status='PENDING'",
                   workflow);
-              return lease(db.queryForMap("SELECT * FROM task_executions WHERE id=?", id));
+              var claimed = lease(db.queryForMap("SELECT * FROM task_executions WHERE id=?", id));
+              AfterCommit.run(
+                  () -> {
+                    telemetry.count("tasks.claimed", "LEASED");
+                    if (claimed.attempt() > 1) telemetry.count("retry.attempts", "CLAIMED");
+                  });
+              event("task.claim", claimed.workflowId(), claimed.id());
+              return claimed;
             }));
   }
 
@@ -96,7 +113,8 @@ public class ExecutionStore {
         (Integer) row.get("attempt"),
         (UUID) row.get("lease_owner"),
         (Map<String, Object>) json.value(row.get("input").toString()),
-        (Integer) row.get("timeout_seconds"));
+        (Integer) row.get("timeout_seconds"),
+        (String) row.get("trace_parent"));
   }
 
   private boolean lockWorkflow(UUID workflow) {
@@ -122,6 +140,15 @@ public class ExecutionStore {
                     "UPDATE task_attempts SET status='RUNNING',started_at=clock_timestamp() WHERE task_id=? AND attempt=?",
                     lease.id(),
                     lease.attempt());
+              if (changed == 1) {
+                double seconds =
+                    db.queryForObject(
+                        "SELECT EXTRACT(EPOCH FROM started_at-available_at) FROM task_executions WHERE id=?",
+                        Double.class,
+                        lease.id());
+                AfterCommit.run(
+                    () -> telemetry.timing("scheduling.latency", (long) (seconds * 1000000000L)));
+              }
               return changed == 1;
             }));
   }
@@ -193,6 +220,7 @@ public class ExecutionStore {
                   json.write(output),
                   lease.id(),
                   lease.attempt());
+              AfterCommit.run(() -> telemetry.count("tasks.completed", "SUCCEEDED"));
               return true;
             }));
   }
@@ -219,6 +247,13 @@ public class ExecutionStore {
             row.get("id"),
             row.get("version"));
     if (changed != 1) throw new IllegalStateException("Concurrent task update");
+    AfterCommit.run(
+        () -> {
+          telemetry.count("tasks.completed", to.name());
+          if (!retry) telemetry.count("dead.lettered", "DEAD_LETTERED");
+          if ("EXPIRED".equals(attemptStatus))
+            telemetry.count("lease.expirations", category.name());
+        });
     db.update(
         "UPDATE task_attempts SET status=?,error_category=?,completed_at=clock_timestamp() WHERE task_id=? AND attempt=?",
         attemptStatus,
@@ -273,6 +308,10 @@ public class ExecutionStore {
   }
 
   public UUID retry(UUID taskId) {
+    return retry(taskId, "system");
+  }
+
+  public UUID retry(UUID taskId, String actor) {
     return tx.execute(
         s -> {
           var lookup =
@@ -318,6 +357,7 @@ public class ExecutionStore {
                   workflow);
             }
           }
+          audit.record("TASK_RETRY", actor, workflow, taskId);
           return workflow;
         });
   }
@@ -341,6 +381,8 @@ public class ExecutionStore {
                     Integer.class,
                     id);
             if (failed > 0) {
+              event("workflow.failed", id, null);
+              AfterCommit.run(() -> telemetry.count("workflows.completed", "FAILED"));
               db.update(
                   "UPDATE task_attempts SET status='CANCELLED',completed_at=clock_timestamp() WHERE task_id IN (SELECT id FROM task_executions WHERE workflow_id=?) AND status IN ('LEASED','RUNNING')",
                   id);
@@ -365,11 +407,48 @@ public class ExecutionStore {
                     Integer.class,
                     id);
             if (unfinished == 0) {
+              event("workflow.completed", id, null);
+              AfterCommit.run(() -> telemetry.count("workflows.completed", "SUCCEEDED"));
               state.requireTransitionTo(WorkflowStatus.SUCCEEDED);
               db.update(
                   "UPDATE workflow_executions SET status='SUCCEEDED',completed_at=clock_timestamp(),version=version+1 WHERE id=?",
                   id);
             }
           });
+  }
+
+  private void event(String name, UUID workflow, UUID task) {
+    String parent =
+        db.queryForObject(
+            "SELECT trace_parent FROM workflow_executions WHERE id=?", String.class, workflow);
+    var attributes = new HashMap<String, String>();
+    attributes.put("workflow_id", workflow.toString());
+    if (task != null) attributes.put("task_id", task.toString());
+    AfterCommit.run(
+        () -> {
+          try (var trace = telemetry.start(name, parent, attributes)) {
+            /* Only committed state-change events and whitelisted identifiers. */
+          }
+        });
+  }
+
+  public List<Map<String, Object>> attempts(UUID task, int limit, int offset) {
+    ControlPlane.page(limit, offset);
+    if (db.queryForObject("SELECT COUNT(*) FROM task_executions WHERE id=?", Integer.class, task)
+        == 0) throw FlowException.missing();
+    return db
+        .queryForList(
+            "SELECT task_id,attempt,worker_id,status,leased_at,started_at,completed_at,error_category FROM task_attempts WHERE task_id=? ORDER BY attempt LIMIT ? OFFSET ?",
+            task,
+            limit,
+            offset)
+        .stream()
+        .map(
+            row -> {
+              row.replaceAll(
+                  (k, v) -> v instanceof java.sql.Timestamp t ? t.toInstant().toString() : v);
+              return row;
+            })
+        .toList();
   }
 }

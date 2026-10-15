@@ -69,3 +69,9 @@ The Phase 2 Compose stack started PostgreSQL, API, scheduler and **three healthy
 ## Phase 3 update (2026-10-15)
 
 `mvn spotless:apply` and full `mvn verify` passed: **41 tests, zero failures/errors/skips**. Tests terminate actual PostgreSQL sessions during completion and leadership ownership, abort an uncommitted transition, advance persisted deadlines for recovery/timeout, race duplicate reports and exercise retry exhaustion/manual retry. [Delivery semantics](DELIVERY_SEMANTICS.md) maps all eight failure windows to executable tests. The existing Compose database migrated to V4, all 15 probes passed and the diamond example reached SUCCEEDED again.
+
+## Phase 4 update (2026-10-15)
+
+Full Maven verification passed: **49 tests, zero failures/errors/skips**. The live authenticated diamond completed; API, scheduler and all three worker Prometheus targets were UP. Collector JSON contains a single workflow trace across three separate application containers; see [trace evidence](evidence/phase-4-trace.json). Request-size, strict JSON, role, audit, failure-log redaction and in-memory exporter tests also passed.
+
+Trivy 0.75.0 initially reported HIGH/CRITICAL Tomcat/Jackson advisories. Maintenance overrides (Tomcat 11.0.26; Jackson 2.21.7/3.1.7) were tested and rescanned. Final source/resolved-jar scan: **zero HIGH/CRITICAL vulnerabilities and zero secrets**, with no CVE ignore rules. [Security scan summary](evidence/phase-4-security.json) records the exact command and raw-report hash. Offline dependency identification avoids rate-limited Maven lookups; it does not disable vulnerability-index lookup. The collector uses bounded named storage after tmpfs inspection failed; all final operational services started successfully.

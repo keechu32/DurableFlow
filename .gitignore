@@ -8,3 +8,6 @@
 !.env.example
 *.log
 coverage/
+
+.secrets/
+.local/

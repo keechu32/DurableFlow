@@ -33,6 +33,8 @@ class ControlPlaneIT {
         new SpringApplicationBuilder(ApiApplication.class)
             .run(
                 "--spring.config.name=durableflow-api",
+                "--DURABLEFLOW_OPERATOR_TOKEN=" + TestAuth.OPERATOR,
+                "--DURABLEFLOW_ADMIN_TOKEN=" + TestAuth.ADMIN,
                 "--server.port=0",
                 "--DURABLEFLOW_DB_URL=" + POSTGRES.getJdbcUrl(),
                 "--DURABLEFLOW_DB_USER=" + POSTGRES.getUsername(),
@@ -142,6 +144,7 @@ class ControlPlaneIT {
           client.send(
               HttpRequest.newBuilder(
                       URI.create("http://localhost:" + port + "/api/v1/workflow-definitions"))
+                  .header("Authorization", "Bearer " + TestAuth.OPERATOR)
                   .header("Content-Type", "application/json")
                   .POST(HttpRequest.BodyPublishers.ofString("{\"name\":\"bad\",\"tasks\":[]}"))
                   .build(),
@@ -151,6 +154,7 @@ class ControlPlaneIT {
       var openapi =
           client.send(
               HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs"))
+                  .header("Authorization", "Bearer " + TestAuth.OPERATOR)
                   .GET()
                   .build(),
               HttpResponse.BodyHandlers.ofString());
@@ -182,6 +186,7 @@ class ControlPlaneIT {
           client.send(
               HttpRequest.newBuilder(
                       URI.create("http://localhost:" + port + "/api/v1/workflow-executions"))
+                  .header("Authorization", "Bearer " + TestAuth.OPERATOR)
                   .header("Content-Type", "application/json")
                   .POST(HttpRequest.BodyPublishers.ofString(json.write(request(id, "http"))))
                   .build(),

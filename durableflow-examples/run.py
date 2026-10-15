@@ -13,6 +13,10 @@ BASE = os.environ.get("DURABLEFLOW_URL", "http://localhost:8080")
 def request(path, payload=None):
     headers = {"Content-Type": "application/json"}
     token = os.environ.get("DURABLEFLOW_API_TOKEN")
+    if not token:
+        env_file = Path(__file__).resolve().parents[1] / ".env"
+        if env_file.exists():
+            token = next((line.split("=", 1)[1] for line in env_file.read_text().splitlines() if line.startswith("DURABLEFLOW_OPERATOR_TOKEN=")), None)
     if token:
         headers["Authorization"] = "Bearer " + token
     req = urllib.request.Request(BASE + path, headers=headers,

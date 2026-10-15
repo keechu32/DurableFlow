@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-15",
+  "scanner": "Version: 0.75.0",
+  "command": "trivy fs --config trivy.yaml --offline-scan --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 .",
+  "targets": 8,
+  "high_critical_vulnerabilities": 0,
+  "secrets": 0,
+  "raw_report_sha256": "641ba20383628358128c1f1f634a52a7cebf747abd6b892107647a241b64feaa",
+  "patched_versions": {
+    "tomcat": "11.0.26",
+    "jackson_2": "2.21.7",
+    "jackson_3": "3.1.7"
+  }
+}

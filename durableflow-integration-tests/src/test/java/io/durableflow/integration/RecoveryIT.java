@@ -35,6 +35,8 @@ class RecoveryIT {
         new SpringApplicationBuilder(ApiApplication.class)
             .run(
                 "--spring.config.name=durableflow-api",
+                "--DURABLEFLOW_OPERATOR_TOKEN=" + TestAuth.OPERATOR,
+                "--DURABLEFLOW_ADMIN_TOKEN=" + TestAuth.ADMIN,
                 "--server.port=0",
                 "--DURABLEFLOW_DB_URL=" + POSTGRES.getJdbcUrl(),
                 "--DURABLEFLOW_DB_USER=" + POSTGRES.getUsername(),

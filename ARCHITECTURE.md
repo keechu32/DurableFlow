@@ -37,9 +37,9 @@ All applications share the persistence resource and use a maximum of five JDBC p
 
 ## Trust boundaries
 
-Clients are untrusted and will only access the API. Input validation and limits arrive with the API, with authentication/authorization hardening in Phase 4. Workers and scheduler are trusted services on the internal network and initially have direct database access. A compromised service database credential can compromise engine state; separate database roles and migration credentials remain future hardening work. Compose supplies credentials from ignored local environment configuration. PostgreSQL storage is persistent but is not backed up by Compose.
+Clients are untrusted and will only access the API. Strict JSON/body/graph limits and operator/admin bearer authorization protect the API. Workers and scheduler are trusted services on the internal network and initially have direct database access. A compromised service database credential can compromise engine state; separate database roles and migration credentials remain future hardening work. Compose supplies credentials from ignored local environment configuration. PostgreSQL storage is persistent but is not backed up by Compose.
 
-Health endpoints reveal aggregate status only. Logs use ECS JSON; workflow/task/attempt/worker/trace fields will be added when those entities exist. There are no control-plane routes to secure yet. Do not expose this development deployment publicly. Untrusted payloads will never select arbitrary executables, scripts or classes.
+Health endpoints reveal aggregate status only. Logs use ECS JSON; workflow/task/attempt/worker/trace fields will be added when those entities exist. Control-plane routes require bearer authentication; cancellation, retry and audit require admin. Do not expose this development deployment publicly. Untrusted payloads will never select arbitrary executables, scripts or classes.
 
 ## Coordination and delivery design
 
@@ -96,3 +96,11 @@ Built-in handlers are pure transformations or bounded delay: `uppercase`, `sha25
 Only the PostgreSQL advisory-lock scheduler leader performs lease recovery and reconciliation. Expired attempts become RETRY_WAIT or DEAD_LETTERED according to category and remaining budget; available retries become READY in a later reconciliation. Manual retry has explicit domain guards distinct from normal terminal-state transitions. It grants another attempt budget without resetting historical attempt numbers. The leader holds one session connection and explicitly releases its advisory lock before returning that connection to Hikari.
 
 See [delivery semantics](docs/DELIVERY_SEMANTICS.md) for all eight failure windows, transaction/duplicate-result behavior and the handler idempotency contract.
+
+## Phase 4: operational boundaries
+
+The observability module owns the OpenTelemetry SDK and bounded-cardinality Micrometer instrumentation. API submission persists W3C trace context; worker execution and scheduler terminal events use that context across processes. Durable event counters and outcome spans are emitted after commit. Worker duration spans/timers describe attempted execution even when its result cannot commit. JSON logs correlate whitelisted identifiers and trace/span IDs, including failure paths. Traces and logs exclude payloads, headers and raw handler exceptions.
+
+Spring Security enforces stateless bearer roles on API routes. The input boundary caps fixed/chunked bodies at 1 MiB; Jackson rejects duplicate keys, unknown fields, coercion and excessive nesting. Administrative state changes append audit rows in the same transaction. Scheduler/worker probes and metrics remain internal; API metrics are authenticated. Compose adds a memory-bounded OTLP collector and Prometheus with DNS-based replica discovery. The collector's bounded trace files live in a named volume owned by UID 10001; a one-shot initializer establishes permissions.
+
+The initial single database credential and shared role tokens are development tradeoffs, not multi-tenant production identity. See [security](docs/SECURITY.md), [operations](docs/OPERATIONS.md) and the recorded [live cross-process trace](docs/evidence/phase-4-trace.json).

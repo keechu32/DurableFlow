@@ -1,7 +1,7 @@
 <FindBugsFilter>
   <!-- Spring services intentionally retain container-owned collaborators. Domain payloads are not excluded. -->
   <Match>
-    <Class name="~io\.durableflow\.(persistence|api|scheduler|worker)\..*"/>
+    <Class name="~io\.durableflow\.(persistence|api|scheduler|worker|observability)\..*"/>
     <Method name="&lt;init&gt;"/>
     <Bug pattern="EI_EXPOSE_REP2"/>
   </Match>

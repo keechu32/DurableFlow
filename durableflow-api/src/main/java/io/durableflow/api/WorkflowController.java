@@ -6,6 +6,7 @@ import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1")
 public class WorkflowController {
@@ -51,7 +52,8 @@ public class WorkflowController {
   }
 
   @PostMapping("/workflow-executions/{id}/cancel")
-  public Map<String, Object> cancel(@PathVariable UUID id) {
-    return service.cancel(id);
+  public Map<String, Object> cancel(
+      @PathVariable UUID id, org.springframework.security.core.Authentication auth) {
+    return service.cancel(id, auth.getName());
   }
 }

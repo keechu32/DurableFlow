@@ -23,10 +23,15 @@
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit-jupiter.version>5.14.4</junit-jupiter.version>
+    <!-- Security fixes newer than Boot 4.1.1's BOM; see docs/SECURITY.md. -->
+    <tomcat.version>11.0.26</tomcat.version>
+    <jackson-bom.version>3.1.7</jackson-bom.version>
+    <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
     <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
   <modules>
     <module>durableflow-model</module>
+    <module>durableflow-observability</module>
     <module>durableflow-persistence</module>
     <module>durableflow-api</module>
     <module>durableflow-scheduler</module>

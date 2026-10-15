@@ -32,6 +32,8 @@ class ExecutionIT {
         new SpringApplicationBuilder(ApiApplication.class)
             .run(
                 "--spring.config.name=durableflow-api",
+                "--DURABLEFLOW_OPERATOR_TOKEN=" + TestAuth.OPERATOR,
+                "--DURABLEFLOW_ADMIN_TOKEN=" + TestAuth.ADMIN,
                 "--server.port=0",
                 "--DURABLEFLOW_DB_URL=" + POSTGRES.getJdbcUrl(),
                 "--DURABLEFLOW_DB_USER=" + POSTGRES.getUsername(),
@@ -69,7 +71,12 @@ class ExecutionIT {
   }
 
   WorkerRuntime worker() {
-    return new WorkerRuntime(store, new Handlers(), 5, 10);
+    return new WorkerRuntime(
+        store,
+        new Handlers(),
+        context.getBean(io.durableflow.observability.Telemetry.class),
+        5,
+        10);
   }
 
   static void await(BooleanSupplier condition) {

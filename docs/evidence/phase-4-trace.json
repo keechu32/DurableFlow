@@ -1,0 +1,16 @@
+{
+  "trace_id": "a1c81c0bacae5f65728296502b173e2b",
+  "workflow_id": "2970d67a-24a3-4b7d-b2d8-3fce703c211e",
+  "services": [
+    "durableflow-api",
+    "durableflow-scheduler",
+    "durableflow-worker"
+  ],
+  "span_names": [
+    "control-plane.request",
+    "task.claim",
+    "task.execute",
+    "workflow.completed"
+  ],
+  "source": "live Compose collector JSON; payloads omitted"
+}
