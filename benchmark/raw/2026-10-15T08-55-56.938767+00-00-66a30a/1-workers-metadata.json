@@ -1,0 +1,25 @@
+{
+  "recorded_at": "2026-10-15T08:56:06.570643+00:00",
+  "os": "Darwin",
+  "os_release": "25.6.0",
+  "architecture": "arm64",
+  "host_cpu": "Apple M4 Pro",
+  "host_logical_cpus": "12",
+  "host_memory_bytes": "51539607552",
+  "docker_cpus": 4,
+  "docker_memory_bytes": 6197379072,
+  "docker_server_version": "29.5.2",
+  "java": "openjdk 21.0.12.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+  "postgresql": "17.6",
+  "project_version": "0.1.0-SNAPSHOT",
+  "git_commit": "f13d719c8c2a869f99dceb70d1734823b8aff326",
+  "git_dirty": true,
+  "engine_source_sha256": "964e741125ce663db52dd2cd33b4eeb4756127ab042c83a3552a051e5050ab87",
+  "image_ids": {
+    "api": "sha256:2e15951af1de714696b0f72b0644817cfabac56a6a45f9cc3abfa52ccac8c717",
+    "scheduler": "sha256:8a1d24044f206882617153fe0e3cb79f375d465e0c2f811d2c900130d6cdecb7",
+    "worker": "sha256:302f2ff8d18fdb249e57a6a8b2887b401671f266c920f1654b4e25ec74c9d6ca",
+    "postgres": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94"
+  },
+  "other_local_containers_running": 8
+}

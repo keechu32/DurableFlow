@@ -7,3 +7,6 @@
 
 .secrets/
 .local/
+
+**/__pycache__/
+*.pyc

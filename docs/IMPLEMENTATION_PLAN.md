@@ -1,5 +1,7 @@
 # Implementation plan
 
+**Paused at owner request on 2026-10-15.** Phases 0–4 are committed and pushed; Phase 5 is an incomplete local checkpoint. Resume from [WORK_STATUS.md](WORK_STATUS.md) only after a new instruction.
+
 The owner authorized completing Phases 1–6 and committing/pushing each phase on 2026-10-15. This supersedes the earlier per-phase stop instruction. No cloud resources, spending or deployment are authorized.
 
 1. **Phase 1:** explicit state machines and bounded DAG validation; immutable definition versions; transactional submission, JSONB idempotency and cancellation; REST problems, pagination and OpenAPI; domain/concurrency/API tests.

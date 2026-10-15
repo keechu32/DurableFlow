@@ -104,3 +104,7 @@ The observability module owns the OpenTelemetry SDK and bounded-cardinality Micr
 Spring Security enforces stateless bearer roles on API routes. The input boundary caps fixed/chunked bodies at 1 MiB; Jackson rejects duplicate keys, unknown fields, coercion and excessive nesting. Administrative state changes append audit rows in the same transaction. Scheduler/worker probes and metrics remain internal; API metrics are authenticated. Compose adds a memory-bounded OTLP collector and Prometheus with DNS-based replica discovery. The collector's bounded trace files live in a named volume owned by UID 10001; a one-shot initializer establishes permissions.
 
 The initial single database credential and shared role tokens are development tradeoffs, not multi-tenant production identity. See [security](docs/SECURITY.md), [operations](docs/OPERATIONS.md) and the recorded [live cross-process trace](docs/evidence/phase-4-trace.json).
+
+## Phase 5 checkpoint
+
+Fault and benchmark tooling uses isolated Compose project names and disposable databases, reusing locally built application images. Worker metadata records a Docker instance identifier so fault injection can target the actual lease owner. The HTTP measurement client reuses connections and does not automatically retry submissions. Nine fault scenarios passed; benchmarking remains incomplete and paused. Raw failed and interrupted runs are retained; see [resume notes](docs/WORK_STATUS.md).

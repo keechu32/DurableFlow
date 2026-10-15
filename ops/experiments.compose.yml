@@ -1,0 +1,11 @@
+# Only use with a disposable -p durableflow-faults or -p durableflow-benchmark project.
+services:
+  postgres:
+    ports: !reset []
+  api:
+    ports: !override
+      - "127.0.0.1:${DURABLEFLOW_EXPERIMENT_PORT:-18080}:8080"
+  scheduler:
+    ports: !reset []
+  prometheus:
+    ports: !reset []

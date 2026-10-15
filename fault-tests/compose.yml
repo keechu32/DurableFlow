@@ -1,0 +1,7 @@
+services:
+  scheduler:
+    deploy:
+      replicas: 2
+  worker:
+    environment:
+      DURABLEFLOW_LEASE_SECONDS: 3

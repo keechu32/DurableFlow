@@ -30,14 +30,21 @@ public class ExecutionStore {
   }
 
   public void register(UUID worker, Set<String> types) {
+    register(worker, types, "embedded");
+  }
+
+  public void register(UUID worker, Set<String> types, String instance) {
+    if (instance == null || !instance.matches("[a-zA-Z0-9_.-]{1,128}"))
+      throw new IllegalArgumentException("Invalid instance metadata");
     if (types.isEmpty()
         || types.size() > 16
         || types.stream().anyMatch(t -> !t.matches("[a-zA-Z0-9_-]{1,64}")))
       throw new IllegalArgumentException("Invalid worker capabilities");
     db.update(
-        "INSERT INTO workers(id,supported_types,status,metadata) VALUES (?,?::text[],'ONLINE','{}'::jsonb) ON CONFLICT(id) DO UPDATE SET supported_types=EXCLUDED.supported_types,status='ONLINE',heartbeat_at=clock_timestamp()",
+        "INSERT INTO workers(id,supported_types,status,metadata) VALUES (?,?::text[],'ONLINE',?::jsonb) ON CONFLICT(id) DO UPDATE SET supported_types=EXCLUDED.supported_types,metadata=EXCLUDED.metadata,status='ONLINE',heartbeat_at=clock_timestamp()",
         worker,
-        "{" + String.join(",", types) + "}");
+        "{" + String.join(",", types) + "}",
+        json.write(Map.of("instance", instance)));
   }
 
   public void workerHeartbeat(UUID worker) {

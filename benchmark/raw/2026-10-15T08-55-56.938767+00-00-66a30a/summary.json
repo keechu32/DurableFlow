@@ -1,0 +1,13 @@
+{
+  "started_at": "2026-10-15T08:55:56.939188+00:00",
+  "parameters": {
+    "samples": 1000,
+    "concurrency": 16,
+    "payload_bytes": 256,
+    "warmup_seconds": 5.0
+  },
+  "profiles": [],
+  "status": "INTERRUPTED",
+  "completed_at": "2026-10-15T08:57:05.392918+00:00",
+  "interruption_reason": "Stopped at user request during warm-up drain; no measured profile completed."
+}

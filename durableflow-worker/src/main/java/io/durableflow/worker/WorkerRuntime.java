@@ -49,7 +49,10 @@ public final class WorkerRuntime implements SmartLifecycle {
   @Override
   public synchronized void start() {
     if (accepting) return;
-    store.register(id, handlers.types());
+    // Record default Docker short IDs, never a host computer's name.
+    String instance = System.getenv("HOSTNAME");
+    if (instance == null || !instance.matches("[0-9a-f]{12}")) instance = "embedded";
+    store.register(id, handlers.types(), instance);
     accepting = true;
     worker = new Thread(this::loop, "durableflow-worker");
     heartbeat = Executors.newSingleThreadScheduledExecutor();

@@ -28,3 +28,5 @@ Phase 0 verification completed during Phase 1 after installing a local container
 - [ ] Phase 6: public release preparation, audit and fresh-clone verification.
 
 Phase reports: [Phase 1](phases/phase-1.md), [Phase 2](phases/phase-2.md), [Phase 3](phases/phase-3.md), [Phase 4](phases/phase-4.md).
+
+Phase 5 is paused at the owner’s request. Fault scenarios passed; benchmark runs are failed/interrupted, so the phase remains unchecked. See [resume notes](WORK_STATUS.md).

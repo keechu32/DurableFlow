@@ -67,6 +67,7 @@ services:
         condition: service_healthy
   api:
     <<: *app
+    image: durableflow-api:local
     build:
       context: .
       args:
@@ -80,6 +81,7 @@ services:
       - "127.0.0.1:8080:8080"
   scheduler:
     <<: *app
+    image: durableflow-scheduler:local
     build:
       context: .
       args:
@@ -91,6 +93,7 @@ services:
       - "127.0.0.1:8081:8080"
   worker:
     <<: *app
+    image: durableflow-worker:local
     build:
       context: .
       args:

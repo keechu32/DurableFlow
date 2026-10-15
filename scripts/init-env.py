@@ -12,6 +12,9 @@ if path.exists():
         if "=" in line and not line.lstrip().startswith("#"):
             key, value = line.split("=", 1)
             values[key] = value
+for key in ("DURABLEFLOW_DB_USER", "DURABLEFLOW_DB_PASSWORD", "DURABLEFLOW_OPERATOR_TOKEN", "DURABLEFLOW_ADMIN_TOKEN"):
+    if os.environ.get(key):
+        values[key] = os.environ[key]
 values.setdefault("DURABLEFLOW_DB_USER", "durableflow")
 for key in ("DURABLEFLOW_DB_PASSWORD", "DURABLEFLOW_OPERATOR_TOKEN", "DURABLEFLOW_ADMIN_TOKEN"):
     values.setdefault(key, secrets.token_hex(32))

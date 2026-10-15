@@ -1,0 +1,16 @@
+{
+  "started_at": "2026-10-15T08:50:22.878497+00:00",
+  "parameters": {
+    "samples": 1000,
+    "concurrency": 16,
+    "payload_bytes": 256,
+    "warmup_seconds": 5.0
+  },
+  "profiles": [],
+  "status": "FAILED",
+  "error": {
+    "type": "URLError",
+    "message": "<urlopen error [Errno 49] Can't assign requested address>"
+  },
+  "completed_at": "2026-10-15T08:51:01.267878+00:00"
+}

@@ -2,7 +2,7 @@
 
 A small PostgreSQL-backed durable DAG workflow engine, built to make distributed execution and its failure modes understandable and testable.
 
-**Status: Phase 4 operations and security.** Durable DAG execution and recovery now include role-based API authentication, audit, strict input limits, OpenTelemetry traces and Prometheus metrics. Fault measurements and release preparation are next. No performance claims or benchmark results exist.
+**Status: Phase 4 operations and security.** Durable DAG execution and recovery now include role-based API authentication, audit, strict input limits, OpenTelemetry traces and Prometheus metrics. Phase 5 tooling is in progress and paused at the owner’s request; nine fault scenarios passed, but no measured benchmark profile completed. See [resume notes](docs/WORK_STATUS.md). No performance claims are made.
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
