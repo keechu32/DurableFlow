@@ -1,0 +1,41 @@
+name: build-and-test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Configure ephemeral Compose credentials
+        run: |
+          password=$(openssl rand -hex 24)
+          echo "::add-mask::$password"
+          echo "DURABLEFLOW_DB_USER=durableflow_ci" >> "$GITHUB_ENV"
+          echo "DURABLEFLOW_DB_PASSWORD=$password" >> "$GITHUB_ENV"
+      - name: Verify formatting, static analysis, unit and Testcontainers tests
+        run: mvn -B -ntp verify
+      - name: Start all applications against PostgreSQL
+        run: |
+          docker compose config --quiet
+          docker compose up --build --wait --wait-timeout 240
+          bash scripts/smoke-test.sh
+      - name: Compose diagnostics
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Tear down ephemeral CI services
+        if: always()
+        run: docker compose down --volumes
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: '**/target/*-reports/'

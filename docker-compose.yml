@@ -1,0 +1,68 @@
+name: durableflow
+x-app: &app
+  environment: &app-env
+    DURABLEFLOW_DB_URL: jdbc:postgresql://postgres:5432/durableflow
+    DURABLEFLOW_DB_USER: ${DURABLEFLOW_DB_USER:?Set DURABLEFLOW_DB_USER in .env}
+    DURABLEFLOW_DB_PASSWORD: ${DURABLEFLOW_DB_PASSWORD:?Set DURABLEFLOW_DB_PASSWORD in .env}
+    TZ: UTC
+  depends_on:
+    postgres:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health/readiness"]
+    interval: 5s
+    timeout: 3s
+    retries: 30
+    start_period: 30s
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: durableflow
+      POSTGRES_USER: ${DURABLEFLOW_DB_USER:?Set DURABLEFLOW_DB_USER in .env}
+      POSTGRES_PASSWORD: ${DURABLEFLOW_DB_PASSWORD:?Set DURABLEFLOW_DB_PASSWORD in .env}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  api:
+    <<: *app
+    build:
+      context: .
+      args:
+        MODULE: durableflow-api
+    environment:
+      <<: *app-env
+      SERVER_PORT: 8080
+    ports:
+      - "127.0.0.1:8080:8080"
+  scheduler:
+    <<: *app
+    build:
+      context: .
+      args:
+        MODULE: durableflow-scheduler
+    environment:
+      <<: *app-env
+      SERVER_PORT: 8080
+    ports:
+      - "127.0.0.1:8081:8080"
+  worker:
+    <<: *app
+    build:
+      context: .
+      args:
+        MODULE: durableflow-worker
+    environment:
+      <<: *app-env
+      SERVER_PORT: 8080
+    ports:
+      - "127.0.0.1:8082:8080"
+volumes:
+  postgres-data:

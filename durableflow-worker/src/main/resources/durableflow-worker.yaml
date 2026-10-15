@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: durableflow-worker
+  config:
+    import: classpath:durableflow-persistence.yaml
+server:
+  port: 8082
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+logging:
+  structured:
+    format:
+      console: ecs
