@@ -6,44 +6,56 @@ A small PostgreSQL-backed durable DAG workflow engine, built to make distributed
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
-## Local startup
+License: [MIT](LICENSE).
 
-Prerequisites: Docker Engine/Desktop with Compose v2 supporting `up --wait`, about 4 GB available memory, and ports 5432, 8080–8081 and 9090 free. Container builds supply Java 21 and Maven. For host builds, install JDK 21 and Maven 3.9.9 or newer (3.x).
+## Five-minute quick start
 
-Create local configuration (never commit `.env`):
+Requires Docker Desktop or another Docker Engine using Linux containers, Compose v2.24.4+, Python 3, about 4 GB available memory, and free loopback ports 5432, 8080–8081 and 9090. The Compose images provide Java 21 and Maven; no host JDK or Maven is needed to start the application. First-time image and Maven downloads may take longer than five minutes.
 
-```sh
-python3 scripts/init-env.py
+In Windows PowerShell:
+
+```powershell
+python scripts/init-env.py
 docker compose up --build --wait --wait-timeout 240
-curl --fail http://localhost:8080/actuator/health
-bash scripts/smoke-test.sh
+Invoke-RestMethod http://localhost:8080/actuator/health
+python durableflow-examples/run.py
 ```
 
-The smoke script also requires Python 3 and curl on the host. API: localhost:8080; scheduler health: localhost:8081; worker health: internal port 8080. PostgreSQL listens on localhost:5432. All published ports bind to loopback. Credentials come from your ignored `.env`. Changing database credentials after the volume is initialized does not change existing PostgreSQL accounts.
+The example publishes and executes a four-task diamond through the authenticated REST API, prints state changes and exits nonzero unless it reaches `SUCCEEDED`. It reads the local operator token from the ignored `.env`; the token is not printed.
 
-```sh
-docker compose down                 # keep database data
-# Destructive, optional clean reset: docker compose down --volumes
+On macOS/Linux, the same commands work with `python3` instead of `python`. Health probes are `/actuator/health`, `/actuator/health/liveness`, and `/actuator/health/readiness`; readiness includes database connectivity. API is at `localhost:8080`, scheduler health at `localhost:8081`, and worker health is internal on port 8080. PostgreSQL listens on `localhost:5432`. Published ports bind to loopback. Health details are hidden and sensitive actuator endpoints are not exposed.
+
+Stop the stack without deleting persisted workflow data:
+
+```powershell
+docker compose down
 ```
 
-Health endpoints: `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness`. Readiness includes database connectivity; liveness represents process health. Migration failure prevents startup. Health details are hidden and sensitive actuator endpoints are not exposed. OpenAPI: `/v3/api-docs`; interactive documentation: `/swagger-ui.html`.
+`docker compose down --volumes` permanently deletes the local PostgreSQL and trace volumes; use it only when that data is disposable. Changing database credentials after the volume is initialized does not change existing PostgreSQL accounts.
 
 ## Build and verification
 
-```sh
-mvn -B -ntp verify                 # formatting + unit tests + SpotBugs + Testcontainers
-mvn -B -ntp spotless:apply         # apply Java formatting
+```powershell
+mvn -B -ntp verify
+mvn -B -ntp spotless:apply
 ```
 
 Docker must be running for integration tests; they fail rather than silently skip when it is absent. CI uses ephemeral Testcontainers PostgreSQL, then builds and starts the complete Compose stack and probes every process. No manually provisioned database is needed.
 
-For an explicitly incomplete host-only check when Docker is unavailable:
+If JDK 21 and Maven 3.9.9+ are not installed locally, run the suite in the repository's Java 21/Maven image from PowerShell:
 
-```sh
-mvn -B -ntp -DskipITs verify
+```powershell
+$workspace = (Get-Location).Path
+docker run --rm `
+  --mount "type=bind,source=$workspace,target=/workspace" `
+  --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" `
+  --workdir /workspace `
+  --env TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal `
+  maven:3.9.16-eclipse-temurin-21 `
+  mvn -B -ntp verify
 ```
 
-This still runs the database-unavailable startup test but does not prove successful PostgreSQL startup. See [verification evidence](docs/VERIFICATION.md) for commands actually run and limitations.
+For a host-only compile/test check without Docker, `mvn -B -ntp -DskipITs verify` is explicitly incomplete and does not prove PostgreSQL integration. See [verification evidence](docs/VERIFICATION.md) for actual results and limitations.
 
 ## Layout and design
 
@@ -59,13 +71,32 @@ This still runs the database-unavailable startup test but does not prove success
 
 See [architecture](ARCHITECTURE.md), [ADRs](docs/adr/README.md), [phase checklist](docs/PHASE_CHECKLIST.md), and [contribution guide](CONTRIBUTING.md).
 
-## Delivery semantics and roadmap
+```mermaid
+flowchart LR
+    C[Client] -->|Authenticated REST| A[API]
+    A -->|Commit before acknowledgement| P[(PostgreSQL)]
+    S[Scheduler] -->|Eligibility, recovery, leadership| P
+    W[Workers] -->|Fenced claims and results| P
+    W --> H[Allowlisted handlers]
+    A -. traces .-> O[OpenTelemetry collector]
+    S -. traces .-> O
+    W -. traces .-> O
+    O --> M[Prometheus and trace storage]
+```
 
-The target contract is **at least once**: a task may run again after a crash or lease loss. Side-effecting handlers must use a stable task idempotency key with the destination system. PostgreSQL transactions cannot make arbitrary external effects exactly once.
+## Delivery semantics
+
+The delivery contract is **at least once**: a task may run again after a crash or lease loss. Side-effecting handlers must use a stable task idempotency key with the destination system. PostgreSQL transactions cannot make arbitrary external effects exactly once.
 
 Phases 0–5 deliver atomic claims and safe handlers, recovery and retries, telemetry and security, executable fault tests and exploratory measurements. Phase 6 release preparation is in progress. The API requires operator/admin bearer tokens; cancellation and manual retry require admin. Use this development deployment locally only.
 
 Phase 5's exploratory measurements and their limitations are in [BENCHMARKS.md](BENCHMARKS.md); all successful and unsuccessful raw observations are retained under `benchmark/raw/` and `fault-tests/results/`.
+
+Release preparation and known limitations are tracked in the [readiness report](docs/RELEASE_READINESS.md) and [release checklist](docs/RELEASE_CHECKLIST.md). No release has been published.
+
+## Roadmap and known limitations
+
+The implementation roadmap through Phase 6 is in the [phase checklist](docs/PHASE_CHECKLIST.md). This prototype has a single PostgreSQL source of truth and no database HA, backups, point-in-time recovery, multi-tenant identity, per-tenant quotas, or retention policy. Its shared development tokens and local plaintext network are not a production identity or transport design. Built-in handlers are safe demonstrations; external side effects require caller-provided idempotency and are not benchmarked. Potential production-hardening work is unscheduled and is not a release commitment.
 
 ## Troubleshooting
 
@@ -78,19 +109,42 @@ Phase 5's exploratory measurements and their limitations are in [BENCHMARKS.md](
 
 ## Control-plane example
 
-```sh
-set -a; . ./.env; set +a  # load the generated local development configuration
-curl --fail -H "Authorization: Bearer $DURABLEFLOW_OPERATOR_TOKEN" -H 'Content-Type: application/json' --data-binary @durableflow-examples/diamond.json http://localhost:8080/api/v1/workflow-definitions
-# Use definition_id from the response and version 1:
-curl --fail -H "Authorization: Bearer $DURABLEFLOW_OPERATOR_TOKEN" -H 'Content-Type: application/json' -d '{"definitionId":"REPLACE_WITH_DEFINITION_UUID","version":1,"idempotencyKey":"example-1","input":{}}' http://localhost:8080/api/v1/workflow-executions
+The terminal demo above is the shortest end-to-end example. To make the REST requests explicitly in PowerShell, load the token only into a local process variable:
+
+```powershell
+$token = (Get-Content .secrets/operator-token -Raw).Trim()
+$headers = @{ Authorization = "Bearer $token" }
+$definitionBody = Get-Content durableflow-examples/diamond.json -Raw
+$definition = Invoke-RestMethod `
+  -Method Post `
+  -Uri http://localhost:8080/api/v1/workflow-definitions `
+  -Headers $headers `
+  -ContentType 'application/json' `
+  -Body $definitionBody
+
+$executionBody = @{
+  definitionId = $definition.definition_id
+  version = $definition.version
+  idempotencyKey = [guid]::NewGuid().ToString()
+  input = @{}
+} | ConvertTo-Json -Depth 10
+$execution = Invoke-RestMethod `
+  -Method Post `
+  -Uri http://localhost:8080/api/v1/workflow-executions `
+  -Headers $headers `
+  -ContentType 'application/json' `
+  -Body $executionBody
+Invoke-RestMethod `
+  -Uri "http://localhost:8080/api/v1/workflow-executions/$($execution.id)" `
+  -Headers $headers
 ```
 
 Definitions with the same name publish a new immutable version. Repeating an equivalent submission reuses the execution; conflicting key reuse returns 409. Query `/api/v1/workflow-executions/{id}` and `/api/v1/workflow-executions/{id}/tasks?limit=50&offset=0`. Cancel via `POST /api/v1/workflow-executions/{id}/cancel`. Errors use `application/problem+json` with a stable `code` field. Input bounds and semantics are described in ARCHITECTURE.md.
 
 ## Execute a DAG
 
-```sh
-python3 durableflow-examples/run.py
+```powershell
+python durableflow-examples/run.py
 docker compose logs -f worker scheduler
 ```
 
@@ -98,7 +152,15 @@ Compose starts three worker replicas. Scale with `docker compose up -d --scale w
 
 ## Recovery and dead letters
 
-The scheduler recovers expired leases automatically. Kill a worker during a `delay` task and another worker will claim a new attempt after lease expiry/backoff. Run two schedulers with `docker compose up -d --scale scheduler=2` only after removing the scheduler host-port mapping or using the fault-test override added later; one database session owns maintenance leadership. Task claims stay safe independently of leadership.
+The scheduler recovers expired leases automatically. Kill a worker during a `delay` task and another worker will claim a new attempt after lease expiry/backoff. The reproducible isolated failure demo uses the same owner-targeted injection:
+
+```powershell
+python scripts/init-env.py
+docker compose build
+python fault-tests/run.py --scenario worker-kill
+```
+
+It kills the actual owner of a running task, verifies the replacement attempt succeeds and records stale-owner fencing in a unique results directory. It does not touch the ordinary demo stack or data. Run `python fault-tests/run.py` to execute all nine scenarios. The full fault-tool contract and available single-scenario names are documented in [fault-tests/README.md](fault-tests/README.md).
 
 Query `GET /api/v1/dead-letter-tasks?limit=50&offset=0`; retry with `POST /api/v1/task-executions/{id}/retry`. Retries preserve task identity and immutable input. A user-cancelled workflow cannot be reopened. See [delivery semantics and failure windows](docs/DELIVERY_SEMANTICS.md) before writing side-effecting handlers.
 

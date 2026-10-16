@@ -1,0 +1,32 @@
+name: Design proposal
+description: Discuss an architectural change before implementation.
+title: "[Design]: "
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and constraints
+      description: State the problem, affected components, and constraints.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed design
+      description: Include boundaries, persistence/transaction behavior, and alternatives considered.
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure and recovery model
+      description: Address crash windows, retries, duplicate effects, fencing, cancellation, and data recovery.
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences and validation
+      description: Note security, operations, compatibility, migration, test, and documentation impacts.
+    validations:
+      required: true

@@ -6,6 +6,6 @@ Keep model, persistence, scheduling, API and task execution responsibilities sep
 
 Treat execution as at least once. Never add API-supplied shell commands, scripts, dynamic code loading or unrestricted HTTP handlers. Persist accepted work before returning success. Validate input and sanitize errors. Do not log payloads or credentials. New schema changes require a new Flyway migration; never rewrite an applied migration.
 
-Document material decisions in `docs/adr/`, keep README and ARCHITECTURE accurate, and record observed verification results. Never invent benchmark numbers. Explain failed or unavailable checks in the pull request. Add dependencies only with a clear rationale.
+Document material decisions in `docs/adr/`, keep README and ARCHITECTURE accurate, and record observed verification results. Never invent benchmark numbers. Explain failed or unavailable checks in the pull request. Add dependencies only with a clear rationale. Use the [pull request template](.github/pull_request_template.md) and consult the [release checklist](docs/RELEASE_CHECKLIST.md) for release-candidate work.
 
-Do not commit `.env`, private keys, build output or machine-specific settings. Publishing, pushing, deployment and infrastructure creation require the repository owner's explicit authorization. The implementation proceeds one phase at a time; see [phase checklist](docs/PHASE_CHECKLIST.md).
+Do not commit `.env`, private keys, build output or machine-specific settings. Do not publish credentials, private payloads, or personal data in issues or test evidence. Keep changes reviewable, state assumptions, and link issues or design proposals when applicable. See the [phase checklist](docs/PHASE_CHECKLIST.md) for the project's implementation history.

@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible defect in DurableFlow.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, tokens, private workflow payloads, or personal data.
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: Include the commit SHA and whether this was a source build or container image.
+      placeholder: "c04ccfd"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest safe sequence that reproduces the problem.
+      placeholder: "1. Start with ...\n2. Submit ...\n3. Observe ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Actual behavior
+      description: Include sanitized error messages and relevant statuses; redact identifiers if they are sensitive.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and verification
+      description: OS, Java, Maven, Docker/Compose versions and checks already run.
+    validations:
+      required: true

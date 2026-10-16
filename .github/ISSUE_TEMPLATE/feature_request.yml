@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a user-visible capability or improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: Describe the user need. Do not include secrets or private customer data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Who needs this, and what limitation are they encountering?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed outcome
+      description: Describe the behavior and a concrete success criterion without prescribing an implementation unnecessarily.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and tradeoffs
+    validations:
+      required: false
+  - type: textarea
+    id: safety
+    attributes:
+      label: Delivery and operational considerations
+      description: Note effects on retries, idempotency, persistence, cancellation, security, and operations where applicable.
+    validations:
+      required: false

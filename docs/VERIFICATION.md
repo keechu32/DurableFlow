@@ -91,3 +91,14 @@ Docker Desktop Linux-container mode was available (Engine 29.8.2, 12 CPUs, 7.72 
 | Complete benchmark | Passed at 1, 2, 4 and 8 workers (1,000 samples each, concurrency 16, 256 payload padding bytes, 5-second minimum warm-up) and recovery probe; see raw summary `benchmark/raw/2026-10-16T07-59-03.144012+00-00-3d3cea/summary.json` |
 
 The first Windows fault attempt is retained separately with its harness `NameError`; the corrected rerun passed. Earlier benchmark failure/interruption records and the anomalous eight-worker PostgreSQL CPU sample were not discarded. The benchmark report labels this as a single exploratory run and documents that sampled peak (1,392.77%) exceeds the nominal 1,200% scale of 12 Docker CPUs. Detailed fault conditions, outcomes, machine metadata and limitations are recorded in the [Phase 5 report](phases/phase-5.md) and [benchmark summary](../BENCHMARKS.md).
+
+## Phase 6 verification (2026-10-16, pre-clone)
+
+- Docker-based `mvn -B -ntp clean verify` passed with 49 tests, zero failures/errors/skips, including all PostgreSQL Testcontainers integration tests, Spotless and SpotBugs.
+- `python -m unittest discover -s benchmark -p 'test_*.py'` passed all six Python tests; `compileall` passed for scripts, benchmark, fault tests and examples.
+- The new isolated `python fault-tests/run.py --scenario worker-kill` demonstration passed and retained its evidence at `fault-tests/results/2026-10-16T08-16-44.854545+00-00-80b4b5/results.json`.
+- Docker Compose configuration for base and experimental projects passed in Phase 5. The single-scenario harness uses the same experimental configuration.
+- A local Markdown-link audit found zero broken relative links. PyYAML parsed the four new GitHub issue-template/config files and the CI workflow.
+- The repository's local `.env`, `.secrets/operator-token`, Maven cache and generated `target/`/Python cache outputs are ignored and are not tracked.
+- `mvn dependency:analyze` completed, but reported expected false positives for Spring Boot starters and runtime/service-provider dependencies (including security/web/actuator auto-configuration, springdoc, Prometheus, JDBC/Flyway drivers and the JUnit aggregator). POMs and source usages were reviewed; no runtime dependency was removed on static analysis alone. This prototype adds no Phase 6 runtime dependencies.
+- Trivy is not installed on the host and its container image was not present. The existing GitHub Actions security job scans HIGH/CRITICAL vulnerabilities and secrets; Phase 4's resolved-jar/source scan passed with zero HIGH/CRITICAL findings and zero secrets. Candidate-commit CI results and the fresh-clone setup simulation remain pending.

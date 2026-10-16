@@ -10,6 +10,8 @@ python fault-tests/run.py
 
 Requires Docker Desktop/Linux containers or another Linux-container engine, Compose 2.24.4+ and Python 3. The duplicate-completion persistence test uses host Maven/JDK 21 when available; otherwise on Windows it runs in the repository's Maven 3.9.16/Java 21 Docker image with the Docker socket mounted for Testcontainers. Each run creates a unique disposable Compose project, database volume and loopback port, with two schedulers and three workers. The ordinary demo project and its data are untouched. The harness removes only its uniquely named experiment project and volumes after recording outcomes; never store real data in an experiment project. `--keep-stack` keeps it for inspection.
 
+To reproduce the worker-crash recovery demonstration by itself, run `python fault-tests/run.py --scenario worker-kill`. The harness starts an isolated stack, kills the actual owner of a running delay task, and verifies a replacement attempt succeeds without leaving the former owner with current authority. Available names are `worker-kill`, `scheduler-kill`, `postgres-restart`, `worker-network`, `slow-completion`, `duplicate-submission`, `duplicate-completion`, `retry-exhaustion`, and `graceful-scaling`. With no `--scenario`, all nine run.
+
 Each run creates a unique UTC directory under `fault-tests/results/`. Every scenario records initial state, injected failure, expected invariant, actual result and pass/fail, with elapsed time. The report also records host/engine resources, Docker/Compose details, Java/PostgreSQL/project versions and image IDs. Failed and interrupted runs are retained with explicit status. No scenario is marked passed until its executable assertions succeed.
 
 | Scenario | Mechanism | Assertion |

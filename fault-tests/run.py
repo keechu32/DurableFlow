@@ -89,9 +89,8 @@ def scaling(stack, client):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--keep-stack", action="store_true")
+    parser.add_argument("--scenario", help="Run only the named scenario (default: all nine)")
     args = parser.parse_args()
-    out = ROOT / "fault-tests" / "results" / (utc().replace(":", "-") + "-" + uuid.uuid4().hex[:6])
-    out.mkdir(parents=True)
     stack, client = Stack("faults"), Client()
     scenarios = [
         ("worker-kill", "A delay task is RUNNING with a valid lease", "SIGKILL its owning worker", "A new attempt succeeds and only one attempt has current ownership", lambda: recovery_probe(stack, client)),
@@ -104,6 +103,12 @@ def main():
         ("retry-exhaustion", "A safe delay exceeds its configured one-second timeout", "Allow two attempts to exhaust", "Workflow FAILED; task DEAD_LETTERED at attempt two", lambda: exhaustion(stack, client)),
         ("graceful-scaling", "Twelve safe delay workflows are submitted", "Scale workers 3 to 1 to 4 to 3 gracefully", "Every workflow succeeds; any abandoned claim is recovered", lambda: scaling(stack, client)),
     ]
+    if args.scenario:
+        scenarios = [scenario for scenario in scenarios if scenario[0] == args.scenario]
+        if not scenarios:
+            parser.error("unknown scenario: " + args.scenario)
+    out = ROOT / "fault-tests" / "results" / (utc().replace(":", "-") + "-" + uuid.uuid4().hex[:6])
+    out.mkdir(parents=True)
     report = {"started_at": utc(), "status": "RUNNING", "scenarios": []}
     try:
         stack.down()

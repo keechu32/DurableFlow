@@ -8,4 +8,4 @@ Changed model types/tests, persistence services and migration V2, API controller
 
 Validation on 2026-10-15: `mvn spotless:apply verify` passed with 21 tests, zero failures/errors/skips. Tests include all state-transition pairs, graph failures, disconnected components, immutable nested JSON, concurrent submission, key conflicts, JSONB semantic equivalence, definition history, committed HTTP submission, cancellation, problems, OpenAPI, migrations and health. `docker-compose up --build --wait` succeeded; all nine HTTP smoke probes passed. This also closes Phase 0's previously unavailable container checks. Local Colima uses a verified public Docker Hub mirror because the network gateway blocked direct CDN certificate validation; no insecure registry or TLS bypass was used.
 
-Limitations: no scheduling/recovery/authentication yet; local development only. Keys have global scope and no retention policy. No user decision is needed. The owner authorized subsequent phases and per-phase pushes.
+Limitations at Phase 1: scheduling, recovery and authentication were not implemented at that phase; local development only. Keys have global scope and no retention policy.

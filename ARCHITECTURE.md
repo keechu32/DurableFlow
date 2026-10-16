@@ -2,7 +2,7 @@
 
 ## Scope and context
 
-DurableFlow will accept versioned DAG workflow definitions and execution requests, persist state, coordinate eligible tasks across workers, and recover abandoned work. PostgreSQL is the initial source of truth and coordination point. Clients communicate through a REST control plane. Task execution will be at least once.
+DurableFlow accepts versioned DAG workflow definitions and execution requests, persists state, coordinates eligible tasks across workers, and recovers abandoned work. PostgreSQL is the source of truth and coordination point. Clients communicate through a REST control plane. Task execution is at least once.
 
 Phases 0–2 implement startup, migrations, health, domain state machines, the control plane, atomic claims and distributed execution. Lease recovery and session-advisory-lock scheduler leadership are implemented in Phase 3.
 
@@ -51,17 +51,17 @@ A worker can perform a side effect and crash before committing success. Recovery
 
 ## Expected failure modes
 
-| Failure | Phase 0 behavior / later plan |
+| Failure | Current behavior |
 | --- | --- |
 | PostgreSQL unavailable at startup | Flyway cannot initialize; process startup fails |
-| Database disappears after startup | Readiness fails; liveness stays independent of database; workflow recovery later |
+| Database disappears after startup | Readiness fails while liveness stays independent; progress resumes after connectivity and scheduler/worker recovery |
 | Invalid migration or checksum drift | Startup fails; never auto-baseline or clean the database |
 | Concurrent application startup | Flyway serializes schema migration; integration tests verify repeat application |
-| Application exits | No durable execution state exists yet; Compose can be restarted manually |
-| Worker dies or continues after lease loss | Future fenced result updates and lease recovery; duplicate effects remain possible |
-| Scheduler dies | Future standby leadership acquisition and transactional rollback |
+| Application exits | Committed workflow state remains in PostgreSQL; progress pauses until services restart |
+| Worker dies or continues after lease loss | An expired lease is recovered; stale state updates are fenced; duplicate external effects remain possible |
+| Scheduler dies | A standby acquires the advisory lock; claims and results remain independently fenced |
 | Database volume lost | Data loss; backup/restore and high availability are outside this initial deployment |
-| Graceful shutdown | Boot stops HTTP serving with a shutdown grace period; handler draining arrives in Phase 2 |
+| Graceful shutdown | Worker stops accepting work, drains for up to ten seconds, then abandons uncommitted work for lease recovery |
 
 ## Explicit non-goals
 
