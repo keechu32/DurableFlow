@@ -10,6 +10,8 @@ import json
 import os
 from pathlib import Path
 import platform
+import shutil
+import socket
 import subprocess
 import time
 import urllib.error
@@ -30,6 +32,34 @@ def command(args, timeout=180, check=True):
     if check and result.returncode:
         raise RuntimeError("Command failed: " + " ".join(args[:5]) + "\n" + result.stderr[-1500:])
     return result.stdout.strip()
+
+
+def maven_command(args):
+    executable = shutil.which("mvn")
+    if executable:
+        return [executable, *args]
+    docker = shutil.which("docker")
+    if not docker:
+        raise FileNotFoundError("Maven is not installed and Docker is unavailable")
+    cache = ROOT / ".local" / "maven-repository"
+    cache.mkdir(parents=True, exist_ok=True)
+    return [
+        docker,
+        "run",
+        "--rm",
+        "--mount",
+        "type=bind,source=" + str(ROOT) + ",target=/workspace",
+        "--mount",
+        "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
+        "--workdir",
+        "/workspace",
+        "--env",
+        "TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal",
+        "maven:3.9.16-eclipse-temurin-21",
+        "mvn",
+        "-Dmaven.repo.local=/workspace/.local/maven-repository",
+        *args,
+    ]
 
 
 def wait_for(predicate, seconds=90, description="condition"):
@@ -66,10 +96,22 @@ class Client:
         if self.target.scheme not in {"http", "https"} or self.target.username or self.target.password:
             raise ValueError("A credential-free HTTP(S) experiment URL is required")
         self.local = threading.local()
+        self.connections = {}
+        self.connections_lock = threading.Lock()
 
     def close(self):
         connection = getattr(self.local, "connection", None)
         if connection is not None:
+            self.local.connection = None
+            with self.connections_lock:
+                self.connections.pop(id(connection), None)
+            connection.close()
+
+    def close_all(self):
+        with self.connections_lock:
+            connections = list(self.connections.values())
+            self.connections.clear()
+        for connection in connections:
             connection.close()
         self.local.connection = None
 
@@ -82,6 +124,8 @@ class Client:
             factory = http.client.HTTPSConnection if self.target.scheme == "https" else http.client.HTTPConnection
             connection = factory(self.target.hostname, self.target.port, timeout=10)
             self.local.connection = connection
+            with self.connections_lock:
+                self.connections[id(connection)] = connection
         try:
             connection.request(method, self.target.path.rstrip("/") + path, body=data,
                                headers={"Content-Type": "application/json", "Authorization": "Bearer " + self.tokens[key]})
@@ -119,7 +163,11 @@ class Stack:
         if kind not in {"faults", "benchmark"}:
             raise ValueError("Experiments must use an owned disposable project")
         self.kind = kind
-        self.project = "durableflow-" + kind
+        self.project = "durableflow-" + kind + "-" + uuid.uuid4().hex[:8]
+        if "DURABLEFLOW_EXPERIMENT_PORT" not in os.environ:
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                os.environ["DURABLEFLOW_EXPERIMENT_PORT"] = str(listener.getsockname()[1])
         self.prefix = ["docker", "compose", "-p", self.project, "-f", "docker-compose.yml", "-f", "ops/experiments.compose.yml"]
         if kind == "faults":
             self.prefix += ["-f", "fault-tests/compose.yml"]
@@ -224,10 +272,85 @@ def machine(stack):
             return command(args, 20)
         except (RuntimeError, FileNotFoundError):
             return "unavailable"
+
+    def host_memory():
+        if platform.system() == "Windows":
+            import ctypes
+
+            class MemoryStatus(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_ulong),
+                    ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong),
+                    ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong),
+                    ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+
+            status = MemoryStatus()
+            status.dwLength = ctypes.sizeof(status)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+                return status.ullTotalPhys
+        elif platform.system() == "Darwin":
+            value = optional(["sysctl", "-n", "hw.memsize"])
+            if value != "unavailable":
+                return int(value)
+        elif platform.system() == "Linux":
+            for line in Path("/proc/meminfo").read_text().splitlines():
+                if line.startswith("MemTotal:"):
+                    return int(line.split()[1]) * 1024
+        return "unavailable"
+
     engine = json.loads(command(["docker", "info", "--format", "{{json .}}"] ))
     project = ET.parse(ROOT / "pom.xml").getroot()
     source_hash = hashlib.sha256()
-    for path in [ROOT / "pom.xml", *sorted(ROOT.glob("durableflow-*/pom.xml")), *sorted(ROOT.glob("durableflow-*/src/main/**/*"))]:
+    paths = [
+        ROOT / "pom.xml",
+        ROOT / "Dockerfile",
+        ROOT / "docker-compose.yml",
+        ROOT / "ops" / "experiments.compose.yml",
+        *sorted(ROOT.glob("durableflow-*/pom.xml")),
+        *sorted(ROOT.glob("durableflow-*/src/main/**/*")),
+    ]
+    for path in paths:
         if path.is_file():
             source_hash.update(str(path.relative_to(ROOT)).encode()); source_hash.update(path.read_bytes())
-    return {"recorded_at": utc(), "os": platform.system(), "os_release": platform.release(), "architecture": platform.machine(), "host_cpu": optional(["sysctl", "-n", "machdep.cpu.brand_string"]), "host_logical_cpus": optional(["sysctl", "-n", "hw.ncpu"]), "host_memory_bytes": optional(["sysctl", "-n", "hw.memsize"]), "docker_cpus": engine["NCPU"], "docker_memory_bytes": engine["MemTotal"], "docker_server_version": engine["ServerVersion"], "java": stack.compose("exec", "-T", "api", "java", "-version") or optional(["docker", "exec", stack.ids("api")[0], "java", "--version"]), "postgresql": stack.sql("SHOW server_version"), "project_version": project.find("{http://maven.apache.org/POM/4.0.0}version").text, "git_commit": optional(["git", "rev-parse", "HEAD"]), "git_dirty": bool(command(["git", "status", "--porcelain"])), "engine_source_sha256": source_hash.hexdigest(), "image_ids": {role: command(["docker", "inspect", "--format", "{{.Image}}", stack.ids(role)[0]]) for role in ("api", "scheduler", "worker", "postgres")}, "other_local_containers_running": len(command(["docker", "ps", "-q"]).splitlines()) - len(stack.compose("ps", "-q").splitlines())}
+    java = command(["docker", "exec", stack.ids("api")[0], "java", "--version"])
+    maven = command(["docker", "run", "--rm", "maven:3.9.16-eclipse-temurin-21", "mvn", "-version"], 60)
+    images = {}
+    for role in ("api", "scheduler", "worker", "postgres"):
+        container = json.loads(command(["docker", "inspect", stack.ids(role)[0]]))[0]
+        images[role] = {
+            "reference": container["Config"]["Image"],
+            "image_id": container["Image"],
+            "memory_limit_bytes": container["HostConfig"]["Memory"],
+        }
+    return {
+        "recorded_at": utc(),
+        "os": platform.system(),
+        "os_release": platform.release(),
+        "architecture": platform.machine(),
+        "host_cpu": platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER") or platform.machine(),
+        "host_logical_cpus": os.cpu_count() or "unavailable",
+        "host_memory_bytes": host_memory(),
+        "docker_cpus": engine["NCPU"],
+        "docker_memory_bytes": engine["MemTotal"],
+        "docker_server_version": engine["ServerVersion"],
+        "docker_os_type": engine["OSType"],
+        "docker_compose_version": command(["docker", "compose", "version", "--short"]),
+        "java": java,
+        "maven": maven,
+        "postgresql": stack.sql("SHOW server_version"),
+        "project_version": project.find("{http://maven.apache.org/POM/4.0.0}version").text,
+        "spring_boot_version": project.find("{http://maven.apache.org/POM/4.0.0}parent/{http://maven.apache.org/POM/4.0.0}version").text,
+        "git_commit": optional(["git", "rev-parse", "HEAD"]),
+        "git_dirty": bool(command(["git", "status", "--porcelain"])),
+        "engine_source_sha256": source_hash.hexdigest(),
+        "experiment_project": stack.project,
+        "experiment_port": os.environ["DURABLEFLOW_EXPERIMENT_PORT"],
+        "images": images,
+        "other_local_containers_running": len(command(["docker", "ps", "-q"]).splitlines()) - len(stack.compose("ps", "-q").splitlines()),
+    }

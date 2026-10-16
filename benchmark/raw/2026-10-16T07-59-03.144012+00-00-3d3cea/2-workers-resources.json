@@ -1,0 +1,334 @@
+[
+  {
+    "at": "2026-10-16T08:02:54.592864+00:00",
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "211.06%",
+        "Container": "6c5492643dfb3a5f8fcc09fa86e096adbf9b6e88d7b70c5540450ec31b14e3ae",
+        "ID": "6c5492643dfb",
+        "MemPerc": "61.75%",
+        "MemUsage": "237.1MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-api-1",
+        "NetIO": "198MB / 202MB",
+        "PIDs": "46"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "3.75%",
+        "Container": "6d5958e3cb687563e18da4fd98e30f4a30ba045c8f1cb1cf910a8f1b93f339af",
+        "ID": "6d5958e3cb68",
+        "MemPerc": "28.91%",
+        "MemUsage": "74.01MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-collector-1",
+        "NetIO": "23.4MB / 366kB",
+        "PIDs": "17"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "185.06%",
+        "Container": "8eae8e954e0f427d884f1fd43c3c2a886cc4a29894567412544f9adbcbd64910",
+        "ID": "8eae8e954e0f",
+        "MemPerc": "1.07%",
+        "MemUsage": "84.46MiB / 7.722GiB",
+        "Name": "durableflow-benchmark-17596c45-postgres-1",
+        "NetIO": "48MB / 171MB",
+        "PIDs": "26"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "0.56%",
+        "Container": "55b3982612c5bfef416b73d77459a06bee13379e726f0b094d8e56445b8d0091",
+        "ID": "55b3982612c5",
+        "MemPerc": "17.66%",
+        "MemUsage": "45.2MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-prometheus-1",
+        "NetIO": "2.51MB / 54.4kB",
+        "PIDs": "16"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "19.50%",
+        "Container": "5ec97fdb49b6f7fa120f3af98a38b736d31bd999e04d066a3eb1ad3fac61da1a",
+        "ID": "5ec97fdb49b6",
+        "MemPerc": "47.45%",
+        "MemUsage": "182.2MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-scheduler-1",
+        "NetIO": "12.7MB / 14.4MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "23.71%",
+        "Container": "c7d37709a71b8d24f42b364d3d0824b60453d54b7e9647e4964459f52a52b383",
+        "ID": "c7d37709a71b",
+        "MemPerc": "48.36%",
+        "MemUsage": "185.7MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-1",
+        "NetIO": "4.66MB / 4.78MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "23.38%",
+        "Container": "22da9ff9c042b4ff2360a22bb3298479e56e6c01517a8612fd7e192b7f2cd769",
+        "ID": "22da9ff9c042",
+        "MemPerc": "48.00%",
+        "MemUsage": "184.3MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-2",
+        "NetIO": "4.85MB / 4.96MB",
+        "PIDs": "39"
+      }
+    ],
+    "database_connections": 21
+  },
+  {
+    "at": "2026-10-16T08:02:57.755892+00:00",
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "155.69%",
+        "Container": "6c5492643dfb3a5f8fcc09fa86e096adbf9b6e88d7b70c5540450ec31b14e3ae",
+        "ID": "6c5492643dfb",
+        "MemPerc": "61.89%",
+        "MemUsage": "237.7MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-api-1",
+        "NetIO": "207MB / 212MB",
+        "PIDs": "46"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "3.27%",
+        "Container": "6d5958e3cb687563e18da4fd98e30f4a30ba045c8f1cb1cf910a8f1b93f339af",
+        "ID": "6d5958e3cb68",
+        "MemPerc": "28.92%",
+        "MemUsage": "74.04MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-collector-1",
+        "NetIO": "24.7MB / 389kB",
+        "PIDs": "17"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "159.44%",
+        "Container": "8eae8e954e0f427d884f1fd43c3c2a886cc4a29894567412544f9adbcbd64910",
+        "ID": "8eae8e954e0f",
+        "MemPerc": "1.07%",
+        "MemUsage": "84.26MiB / 7.722GiB",
+        "Name": "durableflow-benchmark-17596c45-postgres-1",
+        "NetIO": "50.4MB / 180MB",
+        "PIDs": "26"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "0.47%",
+        "Container": "55b3982612c5bfef416b73d77459a06bee13379e726f0b094d8e56445b8d0091",
+        "ID": "55b3982612c5",
+        "MemPerc": "17.67%",
+        "MemUsage": "45.24MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-prometheus-1",
+        "NetIO": "2.64MB / 57.1kB",
+        "PIDs": "16"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "15.99%",
+        "Container": "5ec97fdb49b6f7fa120f3af98a38b736d31bd999e04d066a3eb1ad3fac61da1a",
+        "ID": "5ec97fdb49b6",
+        "MemPerc": "47.48%",
+        "MemUsage": "182.3MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-scheduler-1",
+        "NetIO": "13.1MB / 14.8MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "14.60%",
+        "Container": "c7d37709a71b8d24f42b364d3d0824b60453d54b7e9647e4964459f52a52b383",
+        "ID": "c7d37709a71b",
+        "MemPerc": "48.44%",
+        "MemUsage": "186MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-1",
+        "NetIO": "5.12MB / 5.24MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "30.98%",
+        "Container": "22da9ff9c042b4ff2360a22bb3298479e56e6c01517a8612fd7e192b7f2cd769",
+        "ID": "22da9ff9c042",
+        "MemPerc": "48.06%",
+        "MemUsage": "184.5MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-2",
+        "NetIO": "5.26MB / 5.33MB",
+        "PIDs": "39"
+      }
+    ],
+    "database_connections": 21
+  },
+  {
+    "at": "2026-10-16T08:03:01.356212+00:00",
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "125.59%",
+        "Container": "6c5492643dfb3a5f8fcc09fa86e096adbf9b6e88d7b70c5540450ec31b14e3ae",
+        "ID": "6c5492643dfb",
+        "MemPerc": "61.88%",
+        "MemUsage": "237.6MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-api-1",
+        "NetIO": "215MB / 220MB",
+        "PIDs": "46"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "3.01%",
+        "Container": "6d5958e3cb687563e18da4fd98e30f4a30ba045c8f1cb1cf910a8f1b93f339af",
+        "ID": "6d5958e3cb68",
+        "MemPerc": "28.92%",
+        "MemUsage": "74.04MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-collector-1",
+        "NetIO": "25.4MB / 407kB",
+        "PIDs": "17"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "162.63%",
+        "Container": "8eae8e954e0f427d884f1fd43c3c2a886cc4a29894567412544f9adbcbd64910",
+        "ID": "8eae8e954e0f",
+        "MemPerc": "1.07%",
+        "MemUsage": "84.43MiB / 7.722GiB",
+        "Name": "durableflow-benchmark-17596c45-postgres-1",
+        "NetIO": "52.7MB / 188MB",
+        "PIDs": "26"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "1.13%",
+        "Container": "55b3982612c5bfef416b73d77459a06bee13379e726f0b094d8e56445b8d0091",
+        "ID": "55b3982612c5",
+        "MemPerc": "17.69%",
+        "MemUsage": "45.28MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-prometheus-1",
+        "NetIO": "2.81MB / 60.8kB",
+        "PIDs": "16"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "15.96%",
+        "Container": "5ec97fdb49b6f7fa120f3af98a38b736d31bd999e04d066a3eb1ad3fac61da1a",
+        "ID": "5ec97fdb49b6",
+        "MemPerc": "47.58%",
+        "MemUsage": "182.7MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-scheduler-1",
+        "NetIO": "13.8MB / 15.7MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "32.03%",
+        "Container": "c7d37709a71b8d24f42b364d3d0824b60453d54b7e9647e4964459f52a52b383",
+        "ID": "c7d37709a71b",
+        "MemPerc": "48.55%",
+        "MemUsage": "186.4MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-1",
+        "NetIO": "5.63MB / 5.73MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "23.82%",
+        "Container": "22da9ff9c042b4ff2360a22bb3298479e56e6c01517a8612fd7e192b7f2cd769",
+        "ID": "22da9ff9c042",
+        "MemPerc": "48.12%",
+        "MemUsage": "184.8MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-2",
+        "NetIO": "6.05MB / 6.06MB",
+        "PIDs": "39"
+      }
+    ],
+    "database_connections": 21
+  },
+  {
+    "at": "2026-10-16T08:03:04.781280+00:00",
+    "containers": [
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "32.77%",
+        "Container": "6c5492643dfb3a5f8fcc09fa86e096adbf9b6e88d7b70c5540450ec31b14e3ae",
+        "ID": "6c5492643dfb",
+        "MemPerc": "61.89%",
+        "MemUsage": "237.7MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-api-1",
+        "NetIO": "219MB / 224MB",
+        "PIDs": "46"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "2.66%",
+        "Container": "6d5958e3cb687563e18da4fd98e30f4a30ba045c8f1cb1cf910a8f1b93f339af",
+        "ID": "6d5958e3cb68",
+        "MemPerc": "28.84%",
+        "MemUsage": "73.83MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-collector-1",
+        "NetIO": "26.4MB / 432kB",
+        "PIDs": "17"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "90.21%",
+        "Container": "8eae8e954e0f427d884f1fd43c3c2a886cc4a29894567412544f9adbcbd64910",
+        "ID": "8eae8e954e0f",
+        "MemPerc": "1.07%",
+        "MemUsage": "84.84MiB / 7.722GiB",
+        "Name": "durableflow-benchmark-17596c45-postgres-1",
+        "NetIO": "54.5MB / 192MB",
+        "PIDs": "26"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "0.52%",
+        "Container": "55b3982612c5bfef416b73d77459a06bee13379e726f0b094d8e56445b8d0091",
+        "ID": "55b3982612c5",
+        "MemPerc": "17.74%",
+        "MemUsage": "45.41MiB / 256MiB",
+        "Name": "durableflow-benchmark-17596c45-prometheus-1",
+        "NetIO": "2.9MB / 62.6kB",
+        "PIDs": "16"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "26.08%",
+        "Container": "5ec97fdb49b6f7fa120f3af98a38b736d31bd999e04d066a3eb1ad3fac61da1a",
+        "ID": "5ec97fdb49b6",
+        "MemPerc": "48.38%",
+        "MemUsage": "185.8MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-scheduler-1",
+        "NetIO": "14.3MB / 16.3MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "17.39%",
+        "Container": "c7d37709a71b8d24f42b364d3d0824b60453d54b7e9647e4964459f52a52b383",
+        "ID": "c7d37709a71b",
+        "MemPerc": "48.55%",
+        "MemUsage": "186.4MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-1",
+        "NetIO": "6.18MB / 6.23MB",
+        "PIDs": "39"
+      },
+      {
+        "BlockIO": "0B / 0B",
+        "CPUPerc": "31.58%",
+        "Container": "22da9ff9c042b4ff2360a22bb3298479e56e6c01517a8612fd7e192b7f2cd769",
+        "ID": "22da9ff9c042",
+        "MemPerc": "48.18%",
+        "MemUsage": "185MiB / 384MiB",
+        "Name": "durableflow-benchmark-17596c45-worker-2",
+        "NetIO": "6.57MB / 6.58MB",
+        "PIDs": "39"
+      }
+    ],
+    "database_connections": 21
+  }
+]

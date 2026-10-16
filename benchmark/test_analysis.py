@@ -87,7 +87,51 @@ class ClientTransportTests(unittest.TestCase):
             self.assertEqual(len(ports), 2)
             self.assertEqual(len(set(ports)), 1)
         finally:
-            client.close()
+            client.close_all()
+            server.shutdown()
+            server.server_close()
+            thread.join(2)
+
+    def test_dispatch_reuses_connections_across_warmup_batches(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        import tempfile
+        import threading
+        from pathlib import Path
+        from run import dispatch
+        from scripts.experiment import Client
+
+        ports = []
+
+        class Handler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def do_POST(self):
+                self.rfile.read(int(self.headers["Content-Length"]))
+                ports.append(self.client_address[1])
+                body = b'{"id":"workflow","status":"PENDING"}'
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=.01), daemon=True)
+        thread.start()
+        client = Client("http://127.0.0.1:" + str(server.server_port), {"DURABLEFLOW_OPERATOR_TOKEN": "test-only"})
+        try:
+            with tempfile.TemporaryDirectory() as directory, ThreadPoolExecutor(max_workers=1) as pool:
+                path = Path(directory) / "warmup.jsonl"
+                definition = {"definition_id": "definition", "version": 1}
+                dispatch(client, definition, {}, 1, 1, path, pool)
+                dispatch(client, definition, {}, 1, 1, path, pool)
+            self.assertEqual(len(ports), 2)
+            self.assertEqual(len(set(ports)), 1)
+        finally:
+            client.close_all()
             server.shutdown()
             server.server_close()
             thread.join(2)

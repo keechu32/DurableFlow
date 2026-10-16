@@ -75,3 +75,19 @@ The Phase 2 Compose stack started PostgreSQL, API, scheduler and **three healthy
 Full Maven verification passed: **49 tests, zero failures/errors/skips**. The live authenticated diamond completed; API, scheduler and all three worker Prometheus targets were UP. Collector JSON contains a single workflow trace across three separate application containers; see [trace evidence](evidence/phase-4-trace.json). Request-size, strict JSON, role, audit, failure-log redaction and in-memory exporter tests also passed.
 
 Trivy 0.75.0 initially reported HIGH/CRITICAL Tomcat/Jackson advisories. Maintenance overrides (Tomcat 11.0.26; Jackson 2.21.7/3.1.7) were tested and rescanned. Final source/resolved-jar scan: **zero HIGH/CRITICAL vulnerabilities and zero secrets**, with no CVE ignore rules. [Security scan summary](evidence/phase-4-security.json) records the exact command and raw-report hash. Offline dependency identification avoids rate-limited Maven lookups; it does not disable vulnerability-index lookup. The collector uses bounded named storage after tmpfs inspection failed; all final operational services started successfully.
+
+## Phase 5 update (2026-10-16, Windows)
+
+Docker Desktop Linux-container mode was available (Engine 29.8.2, 12 CPUs, 7.72 GiB memory; Compose 5.6.0). Python 3.11.9 was installed on the host. Java 21.0.12.1 and Maven 3.9.16 were supplied through the repository's Docker build image; the host Java 17 and absent Maven did not alter the project toolchain.
+
+| Check | Observed result |
+| --- | --- |
+| `docker compose build` | Passed for API, scheduler and worker using Java 21 |
+| Docker-based `mvn -B -ntp clean verify` | Passed: 49 Java tests, formatting and SpotBugs; Testcontainers ran against Docker |
+| Python benchmark tests | 6 passed; includes HTTP connection reuse across batches |
+| Python syntax checks | Passed for experiment, benchmark and fault-test scripts |
+| Compose config validation | Passed for base and experimental configurations |
+| Fault harness, complete rerun | All nine scenarios passed; evidence in `fault-tests/results/2026-10-16T07-52-45.126264+00-00-eee973/results.json` |
+| Complete benchmark | Passed at 1, 2, 4 and 8 workers (1,000 samples each, concurrency 16, 256 payload padding bytes, 5-second minimum warm-up) and recovery probe; see raw summary `benchmark/raw/2026-10-16T07-59-03.144012+00-00-3d3cea/summary.json` |
+
+The first Windows fault attempt is retained separately with its harness `NameError`; the corrected rerun passed. Earlier benchmark failure/interruption records and the anomalous eight-worker PostgreSQL CPU sample were not discarded. The benchmark report labels this as a single exploratory run and documents that sampled peak (1,392.77%) exceeds the nominal 1,200% scale of 12 Docker CPUs. Detailed fault conditions, outcomes, machine metadata and limitations are recorded in the [Phase 5 report](phases/phase-5.md) and [benchmark summary](../BENCHMARKS.md).

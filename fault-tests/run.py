@@ -11,14 +11,14 @@ import time
 import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.experiment import Client, ROOT, Stack, command, machine, recovery_probe, task_state, utc, wait_for
+from scripts.experiment import Client, ROOT, Stack, command, machine, maven_command, recovery_probe, task_state, utc, wait_for
 
 
 def result_protocol():
-    args = ["mvn", "-B", "-ntp", "verify", "-Dit.test=RecoveryIT#duplicateSuccessIsIdempotentEvenAfterWorkflowCompletion"]
+    args = ["-B", "-ntp", "clean", "verify", "-Dit.test=RecoveryIT#duplicateSuccessIsIdempotentEvenAfterWorkflowCompletion"]
     if os.environ.get("DURABLEFLOW_MAVEN_REPO"):
         args.append("-Dmaven.repo.local=" + os.environ["DURABLEFLOW_MAVEN_REPO"])
-    completed = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, timeout=180)
+    completed = subprocess.run(maven_command(args), cwd=ROOT, capture_output=True, text=True, timeout=600)
     if completed.returncode:
         raise AssertionError("Duplicate-result persistence protocol test failed: " + completed.stdout[-1200:])
     return {"test": "RecoveryIT.duplicateSuccessIsIdempotentEvenAfterWorkflowCompletion", "exit_code": 0, "observed": "16 equivalent reports accepted, conflicting output rejected, task version unchanged"}
@@ -124,11 +124,20 @@ def main():
             (out / "results.json").write_text(json.dumps(report, indent=2) + "\n")
             print(name, "PASS" if item["pass"] else "FAIL", flush=True)
         report["status"] = "PASSED" if all(item["pass"] for item in report["scenarios"]) else "FAILED"
+    except KeyboardInterrupt:
+        report["status"] = "INTERRUPTED"
+        report["interruption_reason"] = "Fault run stopped before all scenarios completed."
+        raise
     finally:
         report["completed_at"] = utc()
         (out / "results.json").write_text(json.dumps(report, indent=2) + "\n")
         if not args.keep_stack:
-            stack.down()
+            try:
+                stack.down()
+            finally:
+                client.close_all()
+        else:
+            client.close_all()
     print("Recorded", out.relative_to(ROOT), flush=True)
     if report["status"] != "PASSED":
         raise SystemExit(1)

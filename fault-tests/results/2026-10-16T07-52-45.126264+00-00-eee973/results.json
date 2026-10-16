@@ -1,0 +1,276 @@
+{
+  "started_at": "2026-10-16T07:52:45.128264+00:00",
+  "status": "PASSED",
+  "scenarios": [
+    {
+      "name": "worker-kill",
+      "initial_state": "A delay task is RUNNING with a valid lease",
+      "injected_failure": "SIGKILL its owning worker",
+      "expected_invariant": "A new attempt succeeds and only one attempt has current ownership",
+      "observed_result": {
+        "lease_recovery_seconds": 3.1410000000032596,
+        "expired_owner_status": null,
+        "workflow_id": "b9122c84-bf5b-4970-9a6f-7c9c2b9735bd",
+        "task_id": "e238f0d9-2199-4d90-9742-08d07f8d5544",
+        "status": "SUCCEEDED",
+        "attempts": [
+          {
+            "task_id": "e238f0d9-2199-4d90-9742-08d07f8d5544",
+            "attempt": 1,
+            "worker_id": "17f7cb87-758b-4c69-8941-06bbf4882ab7",
+            "status": "EXPIRED",
+            "leased_at": "2026-10-16T07:53:15.023542Z",
+            "started_at": "2026-10-16T07:53:15.073128Z",
+            "completed_at": "2026-10-16T07:53:18.521760Z",
+            "error_category": "LEASE_EXPIRED"
+          },
+          {
+            "task_id": "e238f0d9-2199-4d90-9742-08d07f8d5544",
+            "attempt": 2,
+            "worker_id": "56193f26-6c36-4981-8236-09eb400b9793",
+            "status": "SUCCEEDED",
+            "leased_at": "2026-10-16T07:53:18.671552Z",
+            "started_at": "2026-10-16T07:53:18.737525Z",
+            "completed_at": "2026-10-16T07:53:23.751472Z",
+            "error_category": null
+          }
+        ],
+        "recovery_seconds": 8.14100000000326,
+        "injection": "kill"
+      },
+      "pass": true,
+      "elapsed_seconds": 20.562000000005355
+    },
+    {
+      "name": "scheduler-kill",
+      "initial_state": "Two schedulers compete for one advisory lock",
+      "injected_failure": "SIGKILL the elected scheduler",
+      "expected_invariant": "Standby acquires leadership and unblocks a dependent task",
+      "observed_result": {
+        "status": "SUCCEEDED",
+        "workflow_id": "d020b067-296a-4e09-a78d-b1ece84e9bad",
+        "replacement_container": "adbb32ca1d33",
+        "failover_and_workflow_seconds": 2.077999999994063
+      },
+      "pass": true,
+      "elapsed_seconds": 2.5319999999919673
+    },
+    {
+      "name": "postgres-restart",
+      "initial_state": "A delay task is RUNNING",
+      "injected_failure": "Restart the isolated PostgreSQL container",
+      "expected_invariant": "Durable workflow finishes after connectivity returns",
+      "observed_result": {
+        "workflow_id": "167f00ff-261f-4655-ad47-f9a77792b38a",
+        "status": "SUCCEEDED",
+        "attempt": 1,
+        "recovery_seconds": 5.10899999999674
+      },
+      "pass": true,
+      "elapsed_seconds": 5.264999999999418
+    },
+    {
+      "name": "worker-network",
+      "initial_state": "A worker owns a RUNNING delay task",
+      "injected_failure": "Disconnect the owning worker from its Docker network",
+      "expected_invariant": "Healthy workers recover the expired lease; reconnect is safe",
+      "observed_result": {
+        "lease_recovery_seconds": 2.6719999999913853,
+        "expired_owner_status": null,
+        "workflow_id": "1a54490d-1115-4662-886e-0c42ae85471a",
+        "task_id": "32b650d6-52de-48b0-a926-4ab671f05ce6",
+        "status": "SUCCEEDED",
+        "attempts": [
+          {
+            "task_id": "32b650d6-52de-48b0-a926-4ab671f05ce6",
+            "attempt": 1,
+            "worker_id": "56193f26-6c36-4981-8236-09eb400b9793",
+            "status": "EXPIRED",
+            "leased_at": "2026-10-16T07:53:43.231385Z",
+            "started_at": "2026-10-16T07:53:43.241291Z",
+            "completed_at": "2026-10-16T07:53:46.333679Z",
+            "error_category": "LEASE_EXPIRED"
+          },
+          {
+            "task_id": "32b650d6-52de-48b0-a926-4ab671f05ce6",
+            "attempt": 2,
+            "worker_id": "e868610d-81dd-4898-acad-9b20afc5e0e8",
+            "status": "SUCCEEDED",
+            "leased_at": "2026-10-16T07:53:46.493481Z",
+            "started_at": "2026-10-16T07:53:46.503230Z",
+            "completed_at": "2026-10-16T07:53:51.509012Z",
+            "error_category": null
+          }
+        ],
+        "recovery_seconds": 7.76600000000326,
+        "injection": "network"
+      },
+      "pass": true,
+      "elapsed_seconds": 9.5
+    },
+    {
+      "name": "slow-completion",
+      "initial_state": "A worker owns a RUNNING delay task",
+      "injected_failure": "Pause the worker past lease expiration until another attempt finishes",
+      "expected_invariant": "Expired owner cannot overwrite the recovered result",
+      "observed_result": {
+        "lease_recovery_seconds": 2.75,
+        "expired_owner_status": "STALE",
+        "workflow_id": "73179eb6-b4c3-44e5-8d18-9464cb928e5e",
+        "task_id": "ec69bc6c-fa6b-469b-aa23-4be1bea511ba",
+        "status": "SUCCEEDED",
+        "attempts": [
+          {
+            "task_id": "ec69bc6c-fa6b-469b-aa23-4be1bea511ba",
+            "attempt": 1,
+            "worker_id": "5059908b-a5cf-4d98-8b72-4348cee67b88",
+            "status": "EXPIRED",
+            "leased_at": "2026-10-16T07:53:52.672246Z",
+            "started_at": "2026-10-16T07:53:52.682102Z",
+            "completed_at": "2026-10-16T07:53:55.784971Z",
+            "error_category": "LEASE_EXPIRED"
+          },
+          {
+            "task_id": "ec69bc6c-fa6b-469b-aa23-4be1bea511ba",
+            "attempt": 2,
+            "worker_id": "e868610d-81dd-4898-acad-9b20afc5e0e8",
+            "status": "SUCCEEDED",
+            "leased_at": "2026-10-16T07:53:56.070985Z",
+            "started_at": "2026-10-16T07:53:56.078947Z",
+            "completed_at": "2026-10-16T07:54:01.083980Z",
+            "error_category": null
+          }
+        ],
+        "recovery_seconds": 7.796999999991385,
+        "injection": "pause"
+      },
+      "pass": true,
+      "elapsed_seconds": 14.01600000000326
+    },
+    {
+      "name": "duplicate-submission",
+      "initial_state": "One immutable task definition exists",
+      "injected_failure": "Send 32 equivalent submissions concurrently",
+      "expected_invariant": "Exactly one durable execution and task set exists",
+      "observed_result": {
+        "requests": 32,
+        "concurrency": 16,
+        "unique_execution_ids": 1,
+        "task_count": 1,
+        "status": "SUCCEEDED"
+      },
+      "pass": true,
+      "elapsed_seconds": 0.2970000000059372
+    },
+    {
+      "name": "duplicate-completion",
+      "initial_state": "A successful attempt has committed",
+      "injected_failure": "Run 16 duplicate persistence-protocol completion reports",
+      "expected_invariant": "Equivalent reports are idempotent; conflicting output cannot mutate state",
+      "observed_result": {
+        "test": "RecoveryIT.duplicateSuccessIsIdempotentEvenAfterWorkflowCompletion",
+        "exit_code": 0,
+        "observed": "16 equivalent reports accepted, conflicting output rejected, task version unchanged"
+      },
+      "pass": true,
+      "elapsed_seconds": 231.71899999999732
+    },
+    {
+      "name": "retry-exhaustion",
+      "initial_state": "A safe delay exceeds its configured one-second timeout",
+      "injected_failure": "Allow two attempts to exhaust",
+      "expected_invariant": "Workflow FAILED; task DEAD_LETTERED at attempt two",
+      "observed_result": {
+        "workflow_id": "e115fa27-86ff-487c-a0da-8681494226fe",
+        "status": "FAILED",
+        "task_status": "DEAD_LETTERED",
+        "attempts": [
+          {
+            "task_id": "f4faab76-1182-4bef-ba1b-7d71f3aa0fe1",
+            "attempt": 1,
+            "worker_id": "5059908b-a5cf-4d98-8b72-4348cee67b88",
+            "status": "EXPIRED",
+            "leased_at": "2026-10-16T07:57:58.729178Z",
+            "started_at": "2026-10-16T07:57:58.739226Z",
+            "completed_at": "2026-10-16T07:57:59.758161Z",
+            "error_category": "TIMEOUT"
+          },
+          {
+            "task_id": "f4faab76-1182-4bef-ba1b-7d71f3aa0fe1",
+            "attempt": 2,
+            "worker_id": "56193f26-6c36-4981-8236-09eb400b9793",
+            "status": "EXPIRED",
+            "leased_at": "2026-10-16T07:57:59.917837Z",
+            "started_at": "2026-10-16T07:57:59.926086Z",
+            "completed_at": "2026-10-16T07:58:01.013225Z",
+            "error_category": "TIMEOUT"
+          }
+        ]
+      },
+      "pass": true,
+      "elapsed_seconds": 2.3429999999934807
+    },
+    {
+      "name": "graceful-scaling",
+      "initial_state": "Twelve safe delay workflows are submitted",
+      "injected_failure": "Scale workers 3 to 1 to 4 to 3 gracefully",
+      "expected_invariant": "Every workflow succeeds; any abandoned claim is recovered",
+      "observed_result": {
+        "workflows": 12,
+        "worker_counts": [
+          3,
+          1,
+          4,
+          3
+        ],
+        "all_succeeded": true,
+        "maximum_attempt": 1,
+        "retried_workflows": 0
+      },
+      "pass": true,
+      "elapsed_seconds": 20.031000000002678
+    }
+  ],
+  "machine": {
+    "recorded_at": "2026-10-16T07:53:12.102127+00:00",
+    "os": "Windows",
+    "os_release": "10",
+    "architecture": "AMD64",
+    "host_cpu": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+    "host_logical_cpus": 12,
+    "host_memory_bytes": 17101787136,
+    "docker_cpus": 12,
+    "docker_memory_bytes": 8291274752,
+    "docker_server_version": "29.8.2",
+    "docker_os_type": "linux",
+    "java": "openjdk 21.0.12.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+    "postgresql": "17.6",
+    "project_version": "0.1.0-SNAPSHOT",
+    "spring_boot_version": "4.1.1",
+    "git_commit": "018d8704dd61b6292c5b85cb7424a30d38d26567",
+    "git_dirty": true,
+    "engine_source_sha256": "0dc1b087293c20d6a33eb18acdf01c8a1bd58d943ad83bccc92eadd945bd3e32",
+    "experiment_project": "durableflow-faults-464852c1",
+    "experiment_port": "60559",
+    "image_ids": {
+      "api": {
+        "reference": "durableflow-api:local",
+        "image_id": "sha256:60e83f331543253a3f294ab503ac27fa7126fa9683eb472f8d275698179163a3"
+      },
+      "scheduler": {
+        "reference": "durableflow-scheduler:local",
+        "image_id": "sha256:24d4b010875749bfdcc9d126b802fd2cfdc1d0a0bdac435625be10843a407ca4"
+      },
+      "worker": {
+        "reference": "durableflow-worker:local",
+        "image_id": "sha256:976fc18f5687d29ceefda6940d66a33705f21c0b4078c64649f338ea9063b790"
+      },
+      "postgres": {
+        "reference": "postgres:17.6-alpine",
+        "image_id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94"
+      }
+    },
+    "other_local_containers_running": 0
+  },
+  "completed_at": "2026-10-16T07:58:21.080945+00:00"
+}

@@ -3,14 +3,14 @@
 From the repository root, after generating development configuration:
 
 ```sh
-python3 scripts/init-env.py
+python scripts/init-env.py
 docker compose build
-python3 fault-tests/run.py
+python fault-tests/run.py
 ```
 
-Requires JDK 21, Maven, Docker/Compose 2.24.4+ and Python 3. It creates only the **disposable `durableflow-faults` project**, with a private PostgreSQL volume, two schedulers and three workers. Port 18080 must be free; set `DURABLEFLOW_EXPERIMENT_PORT` to select another. The ordinary demo project is untouched. The harness removes its own experiment volumes after recording outcomes; never store real data in an experiment project. `--keep-stack` keeps it for inspection.
+Requires Docker Desktop/Linux containers or another Linux-container engine, Compose 2.24.4+ and Python 3. The duplicate-completion persistence test uses host Maven/JDK 21 when available; otherwise on Windows it runs in the repository's Maven 3.9.16/Java 21 Docker image with the Docker socket mounted for Testcontainers. Each run creates a unique disposable Compose project, database volume and loopback port, with two schedulers and three workers. The ordinary demo project and its data are untouched. The harness removes only its uniquely named experiment project and volumes after recording outcomes; never store real data in an experiment project. `--keep-stack` keeps it for inspection.
 
-Each run creates a unique UTC directory under `fault-tests/results/`. Every scenario records initial state, injected failure, expected invariant, actual result and pass/fail, with elapsed time. Failed attempts are retained. No scenario is marked passed until its executable assertions succeed.
+Each run creates a unique UTC directory under `fault-tests/results/`. Every scenario records initial state, injected failure, expected invariant, actual result and pass/fail, with elapsed time. The report also records host/engine resources, Docker/Compose details, Java/PostgreSQL/project versions and image IDs. Failed and interrupted runs are retained with explicit status. No scenario is marked passed until its executable assertions succeed.
 
 | Scenario | Mechanism | Assertion |
 | --- | --- | --- |

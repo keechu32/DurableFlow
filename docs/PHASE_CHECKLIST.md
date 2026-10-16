@@ -24,9 +24,9 @@ Phase 0 verification completed during Phase 1 after installing a local container
 - [x] Phase 2: atomic scheduling, workers, safe handlers and cancellation.
 - [x] Phase 3: leases, recovery, retry semantics and leader failover.
 - [x] Phase 4: distributed telemetry, operations, authentication and threat model.
-- [ ] Phase 5: reproducible faults and measured benchmarks.
+- [x] Phase 5: reproducible faults and measured benchmarks.
 - [ ] Phase 6: public release preparation, audit and fresh-clone verification.
 
-Phase reports: [Phase 1](phases/phase-1.md), [Phase 2](phases/phase-2.md), [Phase 3](phases/phase-3.md), [Phase 4](phases/phase-4.md).
+Phase reports: [Phase 1](phases/phase-1.md), [Phase 2](phases/phase-2.md), [Phase 3](phases/phase-3.md), [Phase 4](phases/phase-4.md), [Phase 5](phases/phase-5.md).
 
-Phase 5 is paused at the owner’s request. Fault scenarios passed; benchmark runs are failed/interrupted, so the phase remains unchecked. See [resume notes](WORK_STATUS.md).
+Phase 5 is complete: all nine fault scenarios passed on Windows, and one complete 1/2/4/8-worker exploratory benchmark plus the worker-recovery probe passed. Failed and interrupted observations remain preserved. See the [Phase 5 report](phases/phase-5.md), [benchmark results](../BENCHMARKS.md), and [resume notes](WORK_STATUS.md). Phase 6 remains in progress.

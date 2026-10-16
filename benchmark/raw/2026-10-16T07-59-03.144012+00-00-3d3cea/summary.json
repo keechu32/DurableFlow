@@ -1,0 +1,360 @@
+{
+  "started_at": "2026-10-16T07:59:03.144012+00:00",
+  "parameters": {
+    "samples": 1000,
+    "concurrency": 16,
+    "payload_bytes": 256,
+    "warmup_seconds": 5.0
+  },
+  "profiles": [
+    {
+      "workflows": 1000,
+      "submission_seconds": 1.0940000000118744,
+      "elapsed_seconds": 16.172000000005937,
+      "workflow_submissions_per_second": 914.0767824398043,
+      "task_completions_per_second": 62.87938244388868,
+      "end_to_end_tasks_per_second": 61.83527083846357,
+      "additional_claim_attempts": 0,
+      "retried_task_rate": 0.0,
+      "dead_letter_rate": 0.0,
+      "scheduling_latency_ms": {
+        "p50": 8377.233982086182,
+        "p95": 14496.74105644226,
+        "p99": 14864.952087402344
+      },
+      "execution_overhead_ms": {
+        "p50": 3.7047863006591797,
+        "p95": 6.981134414672852,
+        "p99": 10.363101959228516
+      },
+      "workers": 1,
+      "warmup_submissions": 2720,
+      "warmup_dispatch_seconds": 5.0,
+      "warmup_with_drain_seconds": 95.09299999999348,
+      "input_json_bytes": 287,
+      "metadata": {
+        "recorded_at": "2026-10-16T07:59:24.477275+00:00",
+        "os": "Windows",
+        "os_release": "10",
+        "architecture": "AMD64",
+        "host_cpu": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+        "host_logical_cpus": 12,
+        "host_memory_bytes": 17101787136,
+        "docker_cpus": 12,
+        "docker_memory_bytes": 8291274752,
+        "docker_server_version": "29.8.2",
+        "docker_os_type": "linux",
+        "docker_compose_version": "5.6.0",
+        "java": "openjdk 21.0.12.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+        "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\nMaven home: /usr/share/maven\nJava version: 21.0.12.1, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk\nDefault locale: en_US, platform encoding: UTF-8\nOS name: \"linux\", version: \"5.15.167.4-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"",
+        "postgresql": "17.6",
+        "project_version": "0.1.0-SNAPSHOT",
+        "spring_boot_version": "4.1.1",
+        "git_commit": "018d8704dd61b6292c5b85cb7424a30d38d26567",
+        "git_dirty": true,
+        "engine_source_sha256": "0dc1b087293c20d6a33eb18acdf01c8a1bd58d943ad83bccc92eadd945bd3e32",
+        "experiment_project": "durableflow-benchmark-17596c45",
+        "experiment_port": "61452",
+        "images": {
+          "api": {
+            "reference": "durableflow-api:local",
+            "image_id": "sha256:60e83f331543253a3f294ab503ac27fa7126fa9683eb472f8d275698179163a3",
+            "memory_limit_bytes": 402653184
+          },
+          "scheduler": {
+            "reference": "durableflow-scheduler:local",
+            "image_id": "sha256:24d4b010875749bfdcc9d126b802fd2cfdc1d0a0bdac435625be10843a407ca4",
+            "memory_limit_bytes": 402653184
+          },
+          "worker": {
+            "reference": "durableflow-worker:local",
+            "image_id": "sha256:976fc18f5687d29ceefda6940d66a33705f21c0b4078c64649f338ea9063b790",
+            "memory_limit_bytes": 402653184
+          },
+          "postgres": {
+            "reference": "postgres:17.6-alpine",
+            "image_id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+            "memory_limit_bytes": 0
+          }
+        },
+        "other_local_containers_running": 0
+      },
+      "resource_samples": 5,
+      "additional_execution_attempts": 0,
+      "retried_tasks": 0,
+      "dead_lettered_tasks": 0,
+      "maximum_observed_database_connections": 16,
+      "maximum_observed_postgres_cpu_percent": 193.76
+    },
+    {
+      "workflows": 1000,
+      "submission_seconds": 1.1410000000032596,
+      "elapsed_seconds": 12.218999999997322,
+      "workflow_submissions_per_second": 876.4241893051211,
+      "task_completions_per_second": 82.98294507522718,
+      "end_to_end_tasks_per_second": 81.83975775433498,
+      "additional_claim_attempts": 0,
+      "retried_task_rate": 0.0,
+      "dead_letter_rate": 0.0,
+      "scheduling_latency_ms": {
+        "p50": 6160.309076309204,
+        "p95": 10596.559047698975,
+        "p99": 10852.922916412354
+      },
+      "execution_overhead_ms": {
+        "p50": 4.638195037841797,
+        "p95": 10.922908782958984,
+        "p99": 15.256166458129883
+      },
+      "workers": 2,
+      "warmup_submissions": 2240,
+      "warmup_dispatch_seconds": 5.0,
+      "warmup_with_drain_seconds": 72.10899999999674,
+      "input_json_bytes": 287,
+      "metadata": {
+        "recorded_at": "2026-10-16T08:01:41.641375+00:00",
+        "os": "Windows",
+        "os_release": "10",
+        "architecture": "AMD64",
+        "host_cpu": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+        "host_logical_cpus": 12,
+        "host_memory_bytes": 17101787136,
+        "docker_cpus": 12,
+        "docker_memory_bytes": 8291274752,
+        "docker_server_version": "29.8.2",
+        "docker_os_type": "linux",
+        "docker_compose_version": "5.6.0",
+        "java": "openjdk 21.0.12.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+        "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\nMaven home: /usr/share/maven\nJava version: 21.0.12.1, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk\nDefault locale: en_US, platform encoding: UTF-8\nOS name: \"linux\", version: \"5.15.167.4-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"",
+        "postgresql": "17.6",
+        "project_version": "0.1.0-SNAPSHOT",
+        "spring_boot_version": "4.1.1",
+        "git_commit": "018d8704dd61b6292c5b85cb7424a30d38d26567",
+        "git_dirty": true,
+        "engine_source_sha256": "0dc1b087293c20d6a33eb18acdf01c8a1bd58d943ad83bccc92eadd945bd3e32",
+        "experiment_project": "durableflow-benchmark-17596c45",
+        "experiment_port": "61452",
+        "images": {
+          "api": {
+            "reference": "durableflow-api:local",
+            "image_id": "sha256:60e83f331543253a3f294ab503ac27fa7126fa9683eb472f8d275698179163a3",
+            "memory_limit_bytes": 402653184
+          },
+          "scheduler": {
+            "reference": "durableflow-scheduler:local",
+            "image_id": "sha256:24d4b010875749bfdcc9d126b802fd2cfdc1d0a0bdac435625be10843a407ca4",
+            "memory_limit_bytes": 402653184
+          },
+          "worker": {
+            "reference": "durableflow-worker:local",
+            "image_id": "sha256:976fc18f5687d29ceefda6940d66a33705f21c0b4078c64649f338ea9063b790",
+            "memory_limit_bytes": 402653184
+          },
+          "postgres": {
+            "reference": "postgres:17.6-alpine",
+            "image_id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+            "memory_limit_bytes": 0
+          }
+        },
+        "other_local_containers_running": 0
+      },
+      "resource_samples": 4,
+      "additional_execution_attempts": 0,
+      "retried_tasks": 0,
+      "dead_lettered_tasks": 0,
+      "maximum_observed_database_connections": 21,
+      "maximum_observed_postgres_cpu_percent": 185.06
+    },
+    {
+      "workflows": 1000,
+      "submission_seconds": 1.4219999999913853,
+      "elapsed_seconds": 8.921999999991385,
+      "workflow_submissions_per_second": 703.2348804543307,
+      "task_completions_per_second": 120.7406907369614,
+      "end_to_end_tasks_per_second": 112.0824927147462,
+      "additional_claim_attempts": 0,
+      "retried_task_rate": 0.0,
+      "dead_letter_rate": 0.0,
+      "scheduling_latency_ms": {
+        "p50": 3723.9649295806885,
+        "p95": 6704.91886138916,
+        "p99": 6861.5100383758545
+      },
+      "execution_overhead_ms": {
+        "p50": 5.786895751953125,
+        "p95": 13.741016387939453,
+        "p99": 19.444942474365234
+      },
+      "workers": 4,
+      "warmup_submissions": 1696,
+      "warmup_dispatch_seconds": 5.0,
+      "warmup_with_drain_seconds": 51.26600000000326,
+      "input_json_bytes": 287,
+      "metadata": {
+        "recorded_at": "2026-10-16T08:03:37.565262+00:00",
+        "os": "Windows",
+        "os_release": "10",
+        "architecture": "AMD64",
+        "host_cpu": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+        "host_logical_cpus": 12,
+        "host_memory_bytes": 17101787136,
+        "docker_cpus": 12,
+        "docker_memory_bytes": 8291274752,
+        "docker_server_version": "29.8.2",
+        "docker_os_type": "linux",
+        "docker_compose_version": "5.6.0",
+        "java": "openjdk 21.0.12.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+        "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\nMaven home: /usr/share/maven\nJava version: 21.0.12.1, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk\nDefault locale: en_US, platform encoding: UTF-8\nOS name: \"linux\", version: \"5.15.167.4-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"",
+        "postgresql": "17.6",
+        "project_version": "0.1.0-SNAPSHOT",
+        "spring_boot_version": "4.1.1",
+        "git_commit": "018d8704dd61b6292c5b85cb7424a30d38d26567",
+        "git_dirty": true,
+        "engine_source_sha256": "0dc1b087293c20d6a33eb18acdf01c8a1bd58d943ad83bccc92eadd945bd3e32",
+        "experiment_project": "durableflow-benchmark-17596c45",
+        "experiment_port": "61452",
+        "images": {
+          "api": {
+            "reference": "durableflow-api:local",
+            "image_id": "sha256:60e83f331543253a3f294ab503ac27fa7126fa9683eb472f8d275698179163a3",
+            "memory_limit_bytes": 402653184
+          },
+          "scheduler": {
+            "reference": "durableflow-scheduler:local",
+            "image_id": "sha256:24d4b010875749bfdcc9d126b802fd2cfdc1d0a0bdac435625be10843a407ca4",
+            "memory_limit_bytes": 402653184
+          },
+          "worker": {
+            "reference": "durableflow-worker:local",
+            "image_id": "sha256:976fc18f5687d29ceefda6940d66a33705f21c0b4078c64649f338ea9063b790",
+            "memory_limit_bytes": 402653184
+          },
+          "postgres": {
+            "reference": "postgres:17.6-alpine",
+            "image_id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+            "memory_limit_bytes": 0
+          }
+        },
+        "other_local_containers_running": 0
+      },
+      "resource_samples": 3,
+      "additional_execution_attempts": 0,
+      "retried_tasks": 0,
+      "dead_lettered_tasks": 0,
+      "maximum_observed_database_connections": 31,
+      "maximum_observed_postgres_cpu_percent": 237.16
+    },
+    {
+      "workflows": 1000,
+      "submission_seconds": 2.125,
+      "elapsed_seconds": 12.0,
+      "workflow_submissions_per_second": 470.5882352941176,
+      "task_completions_per_second": 93.96276955912052,
+      "end_to_end_tasks_per_second": 83.33333333333333,
+      "additional_claim_attempts": 0,
+      "retried_task_rate": 0.0,
+      "dead_letter_rate": 0.0,
+      "scheduling_latency_ms": {
+        "p50": 2174.6878623962402,
+        "p95": 8174.17311668396,
+        "p99": 8537.820816040039
+      },
+      "execution_overhead_ms": {
+        "p50": 8.5601806640625,
+        "p95": 41.47982597351074,
+        "p99": 342.4949645996094
+      },
+      "workers": 8,
+      "warmup_submissions": 1040,
+      "warmup_dispatch_seconds": 5.0,
+      "warmup_with_drain_seconds": 29.014999999999418,
+      "input_json_bytes": 287,
+      "metadata": {
+        "recorded_at": "2026-10-16T08:05:23.021430+00:00",
+        "os": "Windows",
+        "os_release": "10",
+        "architecture": "AMD64",
+        "host_cpu": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+        "host_logical_cpus": 12,
+        "host_memory_bytes": 17101787136,
+        "docker_cpus": 12,
+        "docker_memory_bytes": 8291274752,
+        "docker_server_version": "29.8.2",
+        "docker_os_type": "linux",
+        "docker_compose_version": "5.6.0",
+        "java": "openjdk 21.0.12.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+        "maven": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\nMaven home: /usr/share/maven\nJava version: 21.0.12.1, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk\nDefault locale: en_US, platform encoding: UTF-8\nOS name: \"linux\", version: \"5.15.167.4-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"",
+        "postgresql": "17.6",
+        "project_version": "0.1.0-SNAPSHOT",
+        "spring_boot_version": "4.1.1",
+        "git_commit": "018d8704dd61b6292c5b85cb7424a30d38d26567",
+        "git_dirty": true,
+        "engine_source_sha256": "0dc1b087293c20d6a33eb18acdf01c8a1bd58d943ad83bccc92eadd945bd3e32",
+        "experiment_project": "durableflow-benchmark-17596c45",
+        "experiment_port": "61452",
+        "images": {
+          "api": {
+            "reference": "durableflow-api:local",
+            "image_id": "sha256:60e83f331543253a3f294ab503ac27fa7126fa9683eb472f8d275698179163a3",
+            "memory_limit_bytes": 402653184
+          },
+          "scheduler": {
+            "reference": "durableflow-scheduler:local",
+            "image_id": "sha256:24d4b010875749bfdcc9d126b802fd2cfdc1d0a0bdac435625be10843a407ca4",
+            "memory_limit_bytes": 402653184
+          },
+          "worker": {
+            "reference": "durableflow-worker:local",
+            "image_id": "sha256:976fc18f5687d29ceefda6940d66a33705f21c0b4078c64649f338ea9063b790",
+            "memory_limit_bytes": 402653184
+          },
+          "postgres": {
+            "reference": "postgres:17.6-alpine",
+            "image_id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+            "memory_limit_bytes": 0
+          }
+        },
+        "other_local_containers_running": 0
+      },
+      "resource_samples": 3,
+      "additional_execution_attempts": 0,
+      "retried_tasks": 0,
+      "dead_lettered_tasks": 0,
+      "maximum_observed_database_connections": 51,
+      "maximum_observed_postgres_cpu_percent": 1392.77
+    }
+  ],
+  "status": "PASSED",
+  "recovery": {
+    "lease_recovery_seconds": 9.594000000011874,
+    "expired_owner_status": null,
+    "workflow_id": "aaf58a85-2e3d-461f-a392-2ff266caa9d7",
+    "task_id": "dfb17a0d-345d-4500-b0a4-b90fd1666420",
+    "status": "SUCCEEDED",
+    "attempts": [
+      {
+        "task_id": "dfb17a0d-345d-4500-b0a4-b90fd1666420",
+        "attempt": 1,
+        "worker_id": "3c3e49d0-73b4-49b7-9274-796ad5188e47",
+        "status": "EXPIRED",
+        "leased_at": "2026-10-16T08:06:10.641459Z",
+        "started_at": "2026-10-16T08:06:10.651836Z",
+        "completed_at": "2026-10-16T08:06:20.696799Z",
+        "error_category": "LEASE_EXPIRED"
+      },
+      {
+        "task_id": "dfb17a0d-345d-4500-b0a4-b90fd1666420",
+        "attempt": 2,
+        "worker_id": "7dd146cf-7891-4eaa-9b4e-589433fb2879",
+        "status": "SUCCEEDED",
+        "leased_at": "2026-10-16T08:06:20.943847Z",
+        "started_at": "2026-10-16T08:06:20.952907Z",
+        "completed_at": "2026-10-16T08:06:25.957346Z",
+        "error_category": null
+      }
+    ],
+    "recovery_seconds": 14.65700000000652,
+    "injection": "kill"
+  },
+  "completed_at": "2026-10-16T08:06:37.533845+00:00"
+}
