@@ -2,7 +2,7 @@
 
 A small PostgreSQL-backed durable DAG workflow engine, built to make distributed execution and its failure modes understandable and testable.
 
-**Status: Phase 5 complete; Phase 6 release preparation in progress.** Durable DAG execution and recovery include role-based API authentication, audit, strict input limits, OpenTelemetry traces, Prometheus metrics, executable failure tests and exploratory 1/2/4/8-worker measurements. See the [Phase 5 report](docs/phases/phase-5.md), [benchmark results](BENCHMARKS.md), and [work status](docs/WORK_STATUS.md). Benchmark numbers are a single local run, not production capacity claims.
+**Status: Phases 0–6 implemented and verified locally; no release published.** Durable DAG execution and recovery include role-based API authentication, audit, strict input limits, OpenTelemetry traces, Prometheus metrics, executable failure tests, and exploratory 1/2/4/8-worker measurements. See the [Phase 5 report](docs/phases/phase-5.md), [release readiness report](docs/RELEASE_READINESS.md), and [benchmark results](BENCHMARKS.md). Benchmark numbers are a single local run, not production capacity claims.
 
 Repository: `git@github.com:keechu32/DurableFlow.git`.
 
@@ -88,7 +88,7 @@ flowchart LR
 
 The delivery contract is **at least once**: a task may run again after a crash or lease loss. Side-effecting handlers must use a stable task idempotency key with the destination system. PostgreSQL transactions cannot make arbitrary external effects exactly once.
 
-Phases 0–5 deliver atomic claims and safe handlers, recovery and retries, telemetry and security, executable fault tests and exploratory measurements. Phase 6 release preparation is in progress. The API requires operator/admin bearer tokens; cancellation and manual retry require admin. Use this development deployment locally only.
+Phases 0–5 deliver atomic claims and safe handlers, recovery and retries, telemetry and security, executable fault tests and exploratory measurements. Phase 6's documentation, templates, audits and fresh-clone simulation are complete; no release has been published. The API requires operator/admin bearer tokens; cancellation and manual retry require admin. Use this development deployment locally only.
 
 Phase 5's exploratory measurements and their limitations are in [BENCHMARKS.md](BENCHMARKS.md); all successful and unsuccessful raw observations are retained under `benchmark/raw/` and `fault-tests/results/`.
 

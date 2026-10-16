@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 6 implementation and audit are in progress. No release is authorized or published.** The repository is a local demonstration, not a production-ready hosted service. The checklist in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) remains the release gate.
+**Phase 6 local release preparation is complete; no release was published.** The repository is a local demonstration, not a production-ready hosted service. The checklist in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) remains the separate future release gate.
 
 ## Public presentation
 
@@ -50,9 +50,11 @@ These describe the observed repository and one local run only. Do not present th
 | Tests and CI | Java tests, Testcontainers, Spotless, SpotBugs, Python tests, Compose startup/smoke and Trivy scans are wired into CI; exact candidate checks are recorded in `VERIFICATION.md` |
 | Dependency analysis | `mvn dependency:analyze` completed; it reports framework starters/runtime service-provider dependencies as source-unused. POM/source review confirms these provide required auto-configuration, JDBC/Flyway, OpenAPI, Prometheus, security and test-runtime behavior; no dependency was removed based on this static report |
 | Local secret scan | Trivy is not installed locally and its image was absent. Ignored secret/config paths are not tracked; the existing CI Trivy job will scan the candidate commit. Phase 4's resolved-jar/source scan had zero HIGH/CRITICAL findings and zero secrets |
+| Links and GitHub YAML | Zero broken local Markdown links; PyYAML parsed issue templates/config and the CI workflow |
+| Fresh clone | Pushed `cbef58d` cloned, initialized, built and ran with an isolated dynamic-port Compose project; API health was `UP` and the diamond demo reached `SUCCEEDED`; scoped resources were removed |
 | Performance claims | One exploratory benchmark with an anomalous sampled CPU peak; no production capacity, SLO, or linear-scaling claim |
 | Operational limitations | Single PostgreSQL node, local plaintext network, shared development tokens, no multi-tenant identity/quotas, backups, HA, retention or public deployment |
 
 ## Remaining release gate
 
-The clean full test suite, dependency review, local link/YAML checks and initial secret/generated-file audit passed. Complete the fresh-clone setup simulation and confirm CI/security scans for the candidate commit. Review unresolved findings in [SECURITY.md](SECURITY.md), [VERIFICATION.md](VERIFICATION.md), and [BENCHMARKS.md](../BENCHMARKS.md). Do not publish a release, deploy, or provision cloud infrastructure as part of this phase.
+The clean full test suite, dependency review, local link/YAML checks, secret/generated-file audit and fresh-clone simulation passed. The local Trivy executable/image was unavailable, and current GitHub Actions results could not be queried because `gh` returned HTTP 401. Before any future release, confirm candidate CI and security scans and review [SECURITY.md](SECURITY.md), [VERIFICATION.md](VERIFICATION.md), and [BENCHMARKS.md](../BENCHMARKS.md). No release, deployment or cloud provisioning was performed.

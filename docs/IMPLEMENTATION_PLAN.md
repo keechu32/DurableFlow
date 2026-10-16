@@ -7,7 +7,7 @@
 3. **Phase 3:** fenced leases, attempts, heartbeats, timeouts, retries and jitter; dead-letter APIs; advisory-lock scheduler leadership; deterministic crash-window tests.
 4. **Phase 4:** authentication/roles, limits, audit and sanitized errors; OTLP traces, metrics, dashboards and threat model; security/telemetry tests.
 5. **Phase 5 (complete):** executable fault scenarios and benchmark tooling; run and preserve raw observations and machine metadata; publish summaries only after successful measurement. See [report](phases/phase-5.md) and [benchmark results](../BENCHMARKS.md).
-6. **Phase 6 (in progress):** MIT license, bug/feature/design templates, pull-request guidance, PowerShell quick start and API examples, terminal/failure-recovery demos, troubleshooting, release checklist and readiness/interview report. Finish repository audits, exact-commit full checks and a fresh-clone setup simulation; document remaining limitations. Do not publish a release or deploy.
+6. **Phase 6 (complete):** MIT license, bug/feature/design templates, pull-request guidance, PowerShell quick start and API examples, terminal/failure-recovery demos, troubleshooting, release checklist and readiness/interview report. Repository audits, clean full checks and a fresh-clone setup simulation passed. Remaining limitations are documented; no release was published or deployment performed.
 
 For every phase: inspect current changes, implement, format, run meaningful tests, update README/ARCHITECTURE/checklist and verification evidence. Missing infrastructure or failed checks remain explicit; do not claim unobserved outcomes.
 
